@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     scene.num_spheres = 0;
     scene.num_cylinders = 0;
     scene.num_lights = 0;
+    // scene.spheres->shininess = 1000;
 
     parse_file(argv[1], &scene);
     render_scene(mlx, &scene);

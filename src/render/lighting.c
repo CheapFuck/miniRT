@@ -187,3 +187,53 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
     // Combine light contribution with object color
     return combine_color(light_contribution, object_color);
 }
+
+t_vector compute_reflection(t_vector light_dir, t_vector normal)
+{
+    t_vector scaled_normal = multiply_scalar(normal, 2.0 * dot(normal, light_dir));
+    return subtract(scaled_normal, light_dir);
+}
+
+
+// t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene)
+// {
+//     t_color light_contribution = {0, 0, 0};
+
+//     // Ambient lighting
+//     light_contribution.r += 255 * scene->ambient.ratio;
+//     light_contribution.g += 255 * scene->ambient.ratio;
+//     light_contribution.b += 255 * scene->ambient.ratio;
+
+//     t_vector view_dir = normalize(subtract(scene->camera.pos, hit_point)); // View vector
+
+//     // Diffuse and specular lighting
+//     for (int i = 0; i < scene->num_lights; i++) {
+//         t_light light = scene->lights[i];
+
+//         t_vector light_dir = normalize(subtract(light.pos, hit_point));
+//         double diffuse_intensity = fmax(0.0, dot(normal, light_dir)) * light.brightness;
+
+//         // Compute reflection vector
+//         t_vector reflect_dir = subtract(multiply_scalar(normal, 2.0 * dot(normal, light_dir)), light_dir);
+
+//         // Compute specular intensity
+//         double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 25) * light.brightness; // 32 = shininess factor
+
+//         // Shadow check (optional)
+//         // double shadow_factor = 1.0;
+//         double shadow_factor = compute_shadow_factor(hit_point, light, scene, 16); // 16 samples for soft shadows
+
+//         if (is_in_shadow(hit_point, light, scene))
+//             shadow_factor = 0.0;
+
+//         // Combine lighting contributions
+//         // if(specular_intensity)
+//         //    printf("specular intensity is: %f\n", specular_intensity);
+//         light_contribution.r += shadow_factor * (255 * diffuse_intensity + 255 * specular_intensity);
+//         light_contribution.g += shadow_factor * (255 * diffuse_intensity + 255 * specular_intensity);
+//         light_contribution.b += shadow_factor * (255 * diffuse_intensity + 255 * specular_intensity);
+//     }
+
+//     // Combine light contribution with object color
+//     return combine_color(light_contribution, object_color);
+// }
