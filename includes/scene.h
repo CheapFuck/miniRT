@@ -33,7 +33,7 @@ typedef struct s_cylinder {
 } t_cylinder;
 
 typedef struct s_scene {
-  t_ambient ambient;       // Add this field for ambient lighting
+    t_ambient ambient;       // Add this field for ambient lighting
     t_camera camera;
     t_light lights[10];
     t_plane planes[10]; // Add planes here

@@ -16,8 +16,8 @@
 # include "../MLX42/include/lodepng/lodepng.h"
 
 
-#define WIDTH  640
-#define HEIGHT 480
+#define WIDTH  1280
+#define HEIGHT 1024
 
 void    render_scene(mlx_t *mlx, t_scene *scene);
 void    exit_with_error(const char *msg);

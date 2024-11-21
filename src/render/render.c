@@ -42,7 +42,7 @@ void render_next_row(void *param)
 {
     t_render_data *data = (t_render_data *)param;
     int i;
-
+    unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
     
     // Render the current row
     // printf("HEIGHT is: %i\ncurrent_row: %i\n", HEIGHT, data->current_row);
@@ -132,8 +132,9 @@ void render_next_row(void *param)
 
 
 
-unsigned char* image_data = malloc(800 * 600 * 4); // Allocate RGBA image buffer
-save_image_to_file(image_data, 800, 600, "output.png");
+        // unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
+        // unsigned char* raw_image_data = (unsigned char*)data->img->pixels;
+        save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
         // Clean up
         free(image_data);
         mlx_terminate(data->mlx);
