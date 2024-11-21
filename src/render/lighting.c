@@ -53,6 +53,21 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
     return (double)unblocked_rays / num_samples; // Fraction of rays that reach the light
 }
 
+int is_checkerboard(t_vector point, double scale) {
+    int x = (int)(floor(point.x / scale));
+    int y = (int)(floor(point.y / scale));
+    int z = (int)(floor(point.z / scale));
+    return (x + y + z) % 2 == 0;
+}
+
+t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale) {
+    if (is_checkerboard(point, scale)) {
+        return color1;
+    } else {
+        return color2;
+    }
+}
+
 
 int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene) {
     // Direction from the hit point to the light source
@@ -161,6 +176,33 @@ int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene) {
 // }
 
 
+// t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene) {
+//     t_color light_contribution = {0, 0, 0};
+
+//     // Ambient lighting
+//     light_contribution.r += 255 * scene->ambient.ratio;
+//     light_contribution.g += 255 * scene->ambient.ratio;
+//     light_contribution.b += 255 * scene->ambient.ratio;
+
+//     // Diffuse lighting
+//     for (int i = 0; i < scene->num_lights; i++) {
+//         t_light light = scene->lights[i];
+//         double shadow_factor = compute_shadow_factor(hit_point, light, scene, 32); // 16 samples for soft shadows
+
+//         if (shadow_factor > 0) { // Only compute lighting if not fully in shadow
+//             t_vector light_dir = normalize(subtract(light.pos, hit_point));
+//             double diffuse_intensity = fmax(0.0, dot(normal, light_dir)) * light.brightness * shadow_factor;
+
+//             light_contribution.r += 255 * diffuse_intensity;
+//             light_contribution.g += 255 * diffuse_intensity;
+//             light_contribution.b += 255 * diffuse_intensity;
+//         }
+//     }
+
+//     // Combine light contribution with object color
+//     return combine_color(light_contribution, object_color);
+// }
+
 t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene) {
     t_color light_contribution = {0, 0, 0};
 
@@ -169,24 +211,36 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
     light_contribution.g += 255 * scene->ambient.ratio;
     light_contribution.b += 255 * scene->ambient.ratio;
 
-    // Diffuse lighting
+    // View direction (from hit point to camera)
+    t_vector view_dir = normalize(subtract(scene->camera.pos, hit_point));
+
+    // Diffuse and specular lighting
     for (int i = 0; i < scene->num_lights; i++) {
         t_light light = scene->lights[i];
-        double shadow_factor = compute_shadow_factor(hit_point, light, scene, 32); // 16 samples for soft shadows
+        double shadow_factor = compute_shadow_factor(hit_point, light, scene, 32); // 32 samples for soft shadows
 
         if (shadow_factor > 0) { // Only compute lighting if not fully in shadow
+            // Light direction
             t_vector light_dir = normalize(subtract(light.pos, hit_point));
+            
+            // Diffuse lighting
             double diffuse_intensity = fmax(0.0, dot(normal, light_dir)) * light.brightness * shadow_factor;
 
-            light_contribution.r += 255 * diffuse_intensity;
-            light_contribution.g += 255 * diffuse_intensity;
-            light_contribution.b += 255 * diffuse_intensity;
+            // Specular lighting
+            t_vector reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0 * dot(normal, light_dir)), light_dir));
+            double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 250) * light.brightness * shadow_factor; // 50 is the shininess factor
+
+            // Add contributions to light
+            light_contribution.r += 255 * (diffuse_intensity + specular_intensity);
+            light_contribution.g += 255 * (diffuse_intensity + specular_intensity);
+            light_contribution.b += 255 * (diffuse_intensity + specular_intensity);
         }
     }
 
     // Combine light contribution with object color
     return combine_color(light_contribution, object_color);
 }
+
 
 t_vector compute_reflection(t_vector light_dir, t_vector normal)
 {

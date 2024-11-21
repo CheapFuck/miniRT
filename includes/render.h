@@ -14,5 +14,10 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
 int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
 t_vector random_point_on_light(t_light light);
 double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, int num_samples);
+int is_checkerboard(t_vector point, double scale);
+t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
+void render_next_row(void *param);
+t_ray create_ray(int x, int y, t_camera *camera);
+uint32_t trace_ray(t_ray ray, t_scene *scene);
 
 #endif // RENDER_H

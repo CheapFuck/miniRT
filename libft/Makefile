@@ -55,7 +55,9 @@ FILES = ft_isalpha \
 		ft_putnbr_fd \
 		ft_arraylen \
 		ft_free_split \
-
+		ft_clean_2d_array \
+		ft_safe_free \
+		
 FILES_B = 	ft_lstnew_bonus \
 	  		ft_lstadd_front_bonus \
 	  		ft_lstsize_bonus \

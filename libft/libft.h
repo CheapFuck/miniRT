@@ -71,6 +71,8 @@ void	ft_putendl_fd(char *s, int fd);
 void	ft_putnbr_fd(int n, int fd);
 void	ft_free_split(char **split);
 int		ft_arraylen(char **array);
+void	clean_2d_array(char **arr);
+void	safe_free(void **ptr);
 
 //Get next lins
 // char	*get_next_line(int fd);

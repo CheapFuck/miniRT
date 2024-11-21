@@ -1,4 +1,11 @@
-// #include "../../includes/minirt.h"
+#include "../../includes/minirt.h"
+
+typedef struct s_render_data {
+    mlx_t *mlx;
+    mlx_image_t *img;
+    t_scene *scene;
+    int current_row; // Track the row being rendered
+} t_render_data;
 
 
 // int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
@@ -168,7 +175,7 @@
 
 // WIP:
 
-#include "../../includes/minirt.h"
+// #include "../../includes/minirt.h"
 
 
 int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
@@ -196,62 +203,61 @@ t_ray create_ray(int x, int y, t_camera *camera) {
     return ray;
 }
 
-void render_scene(mlx_t *mlx, t_scene *scene)
-{
-    // uint32_t color;
-    int i;
 
-    mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
-    if (!img)
-        exit_with_error("Error creating image");
-    // ft_memset(img->pixels, 255, img->width * img->height * BPP);
- 
- for (int y = 0; y < HEIGHT; y++)
- {
-    for (int x = 0; x < WIDTH; x++)
-    {
-        t_ray ray = create_ray(x, y, &scene->camera);
+void render_next_row(void *param) {
+    t_render_data *data = (t_render_data *)param;
+
+    // Render the current row
+    if (data->current_row < HEIGHT) {
+        for (int x = 0; x < WIDTH; x++)    {
+        t_ray ray = create_ray(x, data->current_row, &data->scene->camera);
         double t;
         int hit = 0;
         t_color final_color = {0, 0, 0};
-        
-        for (i = 0; i < scene->num_spheres; i++)
+     int i;   
+        for (i = 0; i < data->scene->num_spheres; i++)
         {
-            if (intersect_sphere(&ray, &scene->spheres[i], &t))
+            if (intersect_sphere(&ray, &data->scene->spheres[i], &t))
             {
                 hit = 1;
          
                 t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-                t_vector normal = normalize(subtract(hit_point, scene->spheres[i].center));
-                final_color = apply_lighting(hit_point, normal, scene->spheres[i].color, scene);
+                t_vector normal = normalize(subtract(hit_point, data->scene->spheres[i].center));
+                final_color = apply_lighting(hit_point, normal, data->scene->spheres[i].color, data->scene);
                 // color = ft_pixel((final_color.r/255)*scene->spheres[i].color.r, (final_color.g/255)*scene->spheres[i].color.g, (final_color.b/255)*scene->spheres[i].color.b,0XFF );
                 // printf("Hit sphere at pixel (%d, %d)\n", x, y);
                 break;
             }
         }
-        for (i = 0; i <= scene->num_cylinders; i++)
+        for (i = 0; i <= data->scene->num_cylinders; i++)
         {
             double t_cy;
-            if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && (!hit || t_cy < t)) {
+            if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy < t)) {
                 hit = 1;
                 t = t_cy;
                 t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-                t_vector normal = normalize(subtract(hit_point, scene->cylinders[i].center));
-                final_color = apply_lighting(hit_point, normal, scene->cylinders[i].color, scene);
+                t_vector normal = normalize(subtract(hit_point, data->scene->cylinders[i].center));
+                final_color = apply_lighting(hit_point, normal, data->scene->cylinders[i].color, data->scene);
                
                 // color = ft_pixel((final_color.r/255)*scene->cylinders[i].color.r, (final_color.g/255)*scene->cylinders[i].color.g, (final_color.b/255)*scene->cylinders[i].color.b,0XFF );
                 // printf("Hit cylinder at pixel (%d, %d)\n", x, y);
                 break;
             }
         }
-for (int i = 0; i < scene->num_planes; i++) {
+for (int i = 0; i < data->scene->num_planes; i++)
+{
+    t_color black = {0, 0, 0}; // Black
+    t_color white = {255, 255, 255}; // White
     double t_plane;
-    if (intersect_plane(&ray, &scene->planes[i], &t_plane) && (!hit || t_plane < t)) {
+
+    if (intersect_plane(&ray, &data->scene->planes[i], &t_plane) && (!hit || t_plane < t)) {
         hit = 1;
         t = t_plane;
         t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-        t_vector normal = scene->planes[i].normal;
-        final_color = apply_lighting(hit_point, normal, scene->planes[i].color, scene);
+        t_vector normal = data->scene->planes[i].normal;
+        t_color object_color = get_checkerboard_color(hit_point, black, white, 1.0);
+        final_color = apply_lighting(hit_point, normal, object_color, data->scene);
+        // final_color = apply_lighting(hit_point, normal, scene->planes[i].color, scene);
          
         // color = ft_pixel((final_color.r/255)*scene->planes[i].color.r, (final_color.g/255)*scene->planes[i].color.g, (final_color.b/255)*scene->planes[i].color.b,0XFF );
     }
@@ -267,7 +273,7 @@ for (int i = 0; i < scene->num_planes; i++) {
             // color_temp = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
             // color = color * color_temp;
             uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
-            mlx_put_pixel(img, x, y, color); // Red silhouette
+            mlx_put_pixel(data->img, x, data->current_row, color); // Red silhouette
         }
         else
         {
@@ -277,10 +283,45 @@ for (int i = 0; i < scene->num_planes; i++) {
 			rand() % 0xFF, // B
 			rand() % 0xFF  // A
             );
-            mlx_put_pixel(img, x, y, color);
+            mlx_put_pixel(data->img, x, data->current_row, color);
+            
         }
+    }
+        data->current_row++;
+
+        // Update the window with the current image
+        mlx_image_to_window(data->mlx, data->img, 0, 0);
+    } else {
+        // Rendering is done; unregister the loop hook
+        mlx_loop_hook(data->mlx, NULL, NULL);
     }
 }
 
-    mlx_image_to_window(mlx, img, 0, 0);
+
+void render_scene(mlx_t *mlx, t_scene *scene)
+{
+    // uint32_t color;
+
+    mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
+    if (!img)
+        exit_with_error("Error creating image");
+    // ft_memset(img->pixels, 255, img->width * img->height * BPP);
+ t_render_data *data = malloc(sizeof(t_render_data));
+    if (!data) {
+        perror("Error allocating render data");
+        exit(EXIT_FAILURE);
+    }
+    data->mlx = mlx;
+    data->img = img;
+    data->scene = scene;
+    data->current_row = 0;
+
+    // Register the rendering function to run in the event loop
+    mlx_loop_hook(mlx, render_next_row, data);
+
+    // Start the MLX event loop
+    mlx_loop(mlx);
+
+    // Clean up
+    free(data);
 }

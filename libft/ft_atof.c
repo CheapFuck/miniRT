@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <stdlib.h>
+#include "libft.h"
 
 double ft_atof(const char *str) {
     double result = 0.0;

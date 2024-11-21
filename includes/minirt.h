@@ -15,8 +15,8 @@
 # include "render.h"
 
 
-#define WIDTH  1024
-#define HEIGHT 768
+#define WIDTH  800
+#define HEIGHT 600
 
 void    render_scene(mlx_t *mlx, t_scene *scene);
 void    exit_with_error(const char *msg);
