@@ -1,9 +1,7 @@
-#include "minirt.h"
-#include <fcntl.h>
-#include <unistd.h>
+#include "../../includes/minirt.h"
 
-
-char *read_line(int fd) {
+char *read_line(int fd)
+{
     char *buffer = malloc(10000); // Allocate a large buffer
     if (!buffer)
         return NULL;
@@ -24,7 +22,8 @@ char *read_line(int fd) {
     return buffer;
 }
 
-void parse_file(const char *filename, t_scene *scene) {
+void parse_file(const char *filename, t_scene *scene)
+{
     int fd = open(filename, O_RDONLY);
     if (fd < 0)
         exit_with_error("Error opening file");

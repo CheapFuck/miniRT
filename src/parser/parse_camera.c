@@ -1,8 +1,7 @@
 #include "../../includes/minirt.h"
 
-
-
-void parse_camera(char *line, t_scene *scene) {
+void parse_camera(char *line, t_scene *scene)
+{
     char **tokens = ft_split(line, ' ');
     if (!tokens || ft_arraylen(tokens) != 4)
         exit_with_error("Invalid camera format");

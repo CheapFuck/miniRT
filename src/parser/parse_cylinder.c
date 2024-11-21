@@ -1,12 +1,7 @@
 #include "../../includes/minirt.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "scene.h"
-
-
-void parse_cylinder(char *line, t_scene *scene) {
+void parse_cylinder(char *line, t_scene *scene)
+{
     t_cylinder cylinder;
     char **tokens = ft_split(line, ' '); // Split the line into tokens based on spaces
     if (!tokens) {
@@ -100,16 +95,3 @@ void parse_cylinder(char *line, t_scene *scene) {
     clean_2d_array(tokens);
 }
 
-
-
-// // Parses a cylinder from the input line and stores it in the scene
-// void parse_cylinder(char *line, t_scene *scene) {
-//     t_cylinder cylinder;
-//     sscanf(line, "cy %lf,%lf,%lf %lf,%lf,%lf %lf %lf %d,%d,%d",
-//            &cylinder.center.x, &cylinder.center.y, &cylinder.center.z,
-//            &cylinder.orientation.x, &cylinder.orientation.y, &cylinder.orientation.z,
-//            &cylinder.diameter, &cylinder.height,
-//            &cylinder.color.r, &cylinder.color.g, &cylinder.color.b);
-//     cylinder.radius = cylinder.diameter / 2.0;
-//     scene->cylinders[scene->num_cylinders++] = cylinder;
-// }

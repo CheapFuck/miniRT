@@ -16,6 +16,7 @@ typedef struct s_ambient {
     t_color color;
 } t_ambient;
 
+
 typedef struct s_ray {
     t_vector origin;
     t_vector direction;

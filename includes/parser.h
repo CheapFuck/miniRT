@@ -20,5 +20,6 @@ int parse_int(const char *str);
 
 // Error handling
 void exit_with_error(const char *msg);
+void save_image_to_file(const unsigned char* raw_image_data, unsigned width, unsigned height, const char* filename);
 
 #endif // PARSER_H
