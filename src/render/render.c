@@ -186,8 +186,10 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
                         final_color = apply_lighting(hit_point, normal, object_color, data->scene);
                     }
                     else
+					{
                         final_color = apply_lighting(hit_point, normal, data->scene->planes[i].color, data->scene);
-                    // color = ft_pixel((final_color.r/255)*scene->planes[i].color.r, (final_color.g/255)*scene->planes[i].color.g, (final_color.b/255)*scene->planes[i].color.b,0XFF );
+                    
+					}// color = ft_pixel((final_color.r/255)*scene->planes[i].color.r, (final_color.g/255)*scene->planes[i].color.g, (final_color.b/255)*scene->planes[i].color.b,0XFF );
                 }
         }
         if (hit)
@@ -213,15 +215,12 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
     // Update the window with the current image
         mlx_image_to_window(data->mlx, data->img, 0, 0);
     }
-    else  //dit veroorzaakt segfaults
+    else
     {
         gettimeofday(&data->end_time, NULL);
         data->render_complete = 1;
         double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
         printf("Rendering took %f seconds\n", elapsed_time);
-
-
-
         // unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
         // unsigned char* raw_image_data = (unsigned char*)data->img->pixels;
         save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
