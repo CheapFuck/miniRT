@@ -17,6 +17,8 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
 int is_checkerboard(t_vector point, double scale);
 t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
 void render_next_row(void *param);
+t_vector cross(t_vector a, t_vector b);
+t_vector world_to_local(t_vector point, t_vector orientation, t_vector center);
 t_ray create_ray(int x, int y, t_camera *camera);
 uint32_t trace_ray(t_ray ray, t_scene *scene);
 

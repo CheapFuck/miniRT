@@ -20,6 +20,7 @@ typedef struct s_plane {
     t_vector point;
     t_vector normal;
     t_color color;
+    bool checker;
 } t_plane;
 
 
@@ -30,7 +31,18 @@ typedef struct s_cylinder {
     double height;
     double radius;
     t_color color;
+    bool checker;
 } t_cylinder;
+
+
+typedef struct s_sphere {
+    t_vector center;
+    double radius;
+    t_color color; // Add this field to store the sphere's color
+    double shininess;
+    bool checker;
+
+} t_sphere;
 
 typedef struct s_scene {
     t_ambient ambient;       // Add this field for ambient lighting

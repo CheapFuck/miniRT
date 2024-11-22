@@ -22,13 +22,6 @@ typedef struct s_ray {
     t_vector direction;
 } t_ray;
 
-typedef struct s_sphere {
-    t_vector center;
-    double radius;
-    t_color color; // Add this field to store the sphere's color
-    double shininess;
-} t_sphere;
-
 // Vector operations
 t_vector subtract(t_vector a, t_vector b);
 double dot(t_vector a, t_vector b);

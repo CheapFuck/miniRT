@@ -77,6 +77,9 @@ void parse_cylinder(char *line, t_scene *scene)
     cylinder.color.b = ft_atoi(color_tokens[2]);
     clean_2d_array(color_tokens);
 
+    cylinder.checker = ft_atoi(tokens[6]);
+
+
     // Calculate the radius
     cylinder.radius = cylinder.diameter / 2.0;
 

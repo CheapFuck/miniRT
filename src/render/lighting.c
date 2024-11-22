@@ -53,11 +53,21 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
     return (double)unblocked_rays / num_samples; // Fraction of rays that reach the light
 }
 
-int is_checkerboard(t_vector point, double scale) {
-    int x = (int)(floor(point.x / scale));
-    int y = (int)(floor(point.y / scale));
-    int z = (int)(floor(point.z / scale));
-    return (x + y + z) % 2 == 0;
+int is_checkerboard(t_vector point, double scale)
+{
+    float epsilon = 1e-4;
+    float grid_size = scale; // Adjust to your checkerboard square size
+    float snapped_x = floor((point.x + epsilon)/ grid_size) * grid_size;
+    float snapped_y = floor((point.y + epsilon)/ grid_size) * grid_size;
+    float snapped_z = floor((point.z + epsilon)/ grid_size) * grid_size;
+    return ((int)(snapped_x / grid_size) + 
+                       (int)(snapped_y / grid_size) + 
+                       (int)(snapped_z / grid_size)) % 2;
+
+    // int x = (int)(floor(point.x / scale));
+    // int y = (int)(floor(point.y / scale));
+    // int z = (int)(floor(point.z / scale));
+    // return (x + y + z) % 2 == 0;
 }
 
 t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale) {
