@@ -6,11 +6,13 @@ typedef struct s_render_data {
     mlx_t *mlx;
     mlx_image_t *img;
     t_scene *scene;
+    int threads_completed;
+    int rendering_finished;  // Add this flag
+    pthread_mutex_t mutex;
     int current_row;
     int render_complete;
     struct timeval start_time;
     struct timeval end_time;
-    pthread_mutex_t mutex;  // Add mutex for thread synchronization
 } t_render_data;
 
 typedef struct s_thread_data {
@@ -147,6 +149,26 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
             }
         }
     }
+    // Update thread completion count
+    pthread_mutex_lock(&data->mutex);
+    data->threads_completed++;
+    
+    // If this is the last thread to complete
+    if (data->threads_completed == NUM_THREADS)
+    {
+        gettimeofday(&data->end_time, NULL);
+        double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + 
+                            (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
+        printf("Rendering took %f seconds\n", elapsed_time);
+        
+        // Save the image
+        save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
+        
+        // Set the finished flag instead of exiting
+        data->rendering_finished = 1;
+    }
+    pthread_mutex_unlock(&data->mutex);
+
     free(thread_data);
     return NULL;
 }
@@ -385,6 +407,27 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
     }
 }
 
+void update_display(void *param)
+{
+    t_render_data *data = (t_render_data *)param;
+    
+    mlx_image_to_window(data->mlx, data->img, 0, 0);
+    
+    // Check if rendering is finished
+    pthread_mutex_lock(&data->mutex);
+    if (data->rendering_finished)
+    {
+        // Clean up and terminate
+        mlx_terminate(data->mlx);
+        pthread_mutex_unlock(&data->mutex);
+        pthread_mutex_destroy(&data->mutex);
+        free(data);
+        exit(0);
+    }
+    pthread_mutex_unlock(&data->mutex);
+}
+
+
 void render_scene(mlx_t *mlx, t_scene *scene)
 {
     mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
@@ -401,12 +444,15 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     data->mlx = mlx;
     data->img = img;
     data->scene = scene;
-    data->render_complete = 0;
+    data->threads_completed = 0;
+    data->rendering_finished = 0;  // Initialize the flag
     pthread_mutex_init(&data->mutex, NULL);
     gettimeofday(&data->start_time, NULL);
 
+    mlx_loop_hook(mlx, update_display, data);
+
     // Create threads
-    const int num_threads = 8;  // Adjust based on your CPU cores
+    const int num_threads = 8;  // Consider making this a #define NUM_THREADS
     pthread_t threads[num_threads];
     int rows_per_thread = HEIGHT / num_threads;
 
@@ -419,21 +465,6 @@ void render_scene(mlx_t *mlx, t_scene *scene)
         pthread_create(&threads[i], NULL, render_thread, thread_data);
     }
 
-    // Wait for all threads to complete
-    for (int i = 0; i < num_threads; i++) {
-        pthread_join(threads[i], NULL);
-    }
-
-    // Cleanup and finish
-    gettimeofday(&data->end_time, NULL);
-    double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + 
-                         (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
-    printf("Rendering took %f seconds\n", elapsed_time);
-
-    mlx_image_to_window(mlx, img, 0, 0);
-    save_image_to_file(img->pixels, WIDTH, HEIGHT, "output.png");
-
-    pthread_mutex_destroy(&data->mutex);
+    // Start the MLX loop
     mlx_loop(mlx);
-    free(data);
 }
