@@ -4,7 +4,8 @@
 #include "minirt.h"
 
 // Function to render the scene
-void render_scene(mlx_t *mlx, t_scene *scene);
+// void render_scene(mlx_t *mlx, t_scene *scene);
+void render_scene(t_render_data *data);
 
 // Ray-Object intersection functions
 int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t);
@@ -24,5 +25,6 @@ uint32_t trace_ray(t_ray ray, t_scene *scene);
 t_color blend_colors(t_color color1, t_color color2, float ratio);
 t_vector refract_ray(t_vector I, t_vector N, float n1, float n2);
 t_color calculate_transparency(t_vector hit_point, t_vector normal, t_ray ray, t_scene *scene, float transparency, float ior);
+void merge_buffers(t_render_data *data, t_thread_data **thread_data_array);
 
 #endif // RENDER_H

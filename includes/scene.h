@@ -1,7 +1,10 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "objects.h" // Include this to access t_sphere and other types
+// #include "objects.h" // Include this to access t_sphere and other types
+#include "minirt.h"
+#include "scene.h"
+#include "objects.h"
 
 typedef struct s_camera {
     t_vector pos;
@@ -57,6 +60,24 @@ typedef struct s_scene {
     int num_lights;
 } t_scene;
 
+typedef struct s_render_data {
+    mlx_t			*mlx;
+    mlx_image_t		*img;
+    t_scene			*scene;
+    int 			threads_completed;
+    int 			rendering_finished;  // Add this flag
+    pthread_mutex_t	mutex;
+    int				current_row;
+    int				render_complete;
+    struct timeval	start_time;
+    struct timeval	end_time;
+} t_render_data;
 
+typedef struct s_thread_data {
+    t_render_data	*render_data;
+    int				start_row;
+    int				end_row;
+    uint32_t		*private_buffer; // Buffer for this thread's portion of the image
+} t_thread_data;
 
 #endif // SCENE_H

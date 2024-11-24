@@ -1,6 +1,6 @@
 NAME = miniRT
 CC 			 = cc
-CFLAGS 	     = -Wall -Wextra -Werror -I./includes -I./MLX42/include -I./MLX/include/lodepng/lodepng.h
+CFLAGS 	     = -Wall -Wextra -Werror -Ofast -I./includes -I./MLX42/include -I./MLX/include/lodepng/lodepng.h
 MLX_FLAGS 	 = -L./MLX42/build -lmlx42 -ldl -lglfw -pthread -lm
 LIBFTDIR 	:=	libft/
 LIBMLX		:= ./MLX42

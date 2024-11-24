@@ -1,25 +1,44 @@
 #include "../../includes/minirt.h"
-#include <sys/time.h>
-#include <pthread.h>
 
-typedef struct s_render_data {
-    mlx_t *mlx;
-    mlx_image_t *img;
-    t_scene *scene;
-    int threads_completed;
-    int rendering_finished;  // Add this flag
-    pthread_mutex_t mutex;
-    int current_row;
-    int render_complete;
-    struct timeval start_time;
-    struct timeval end_time;
-} t_render_data;
 
-typedef struct s_thread_data {
-    t_render_data *render_data;
-    int start_row;
-    int end_row;
-} t_thread_data;
+// typedef struct s_render_data {
+//     mlx_t			*mlx;
+//     mlx_image_t		*img;
+//     t_scene			*scene;
+//     int 			threads_completed;
+//     int 			rendering_finished;  // Add this flag
+//     pthread_mutex_t	mutex;
+//     int				current_row;
+//     int				render_complete;
+//     struct timeval	start_time;
+//     struct timeval	end_time;
+// } t_render_data;
+
+// typedef struct s_thread_data {
+//     t_render_data	*render_data;
+//     int				start_row;
+//     int				end_row;
+//     uint32_t		*private_buffer; // Buffer for this thread's portion of the image
+// } t_thread_data;
+
+void merge_buffers(t_render_data *data, t_thread_data **thread_data_array) {
+    for (int i = 0; i < NUM_THREADS; i++) {
+        t_thread_data *thread_data = thread_data_array[i];
+        int buffer_index = 0;
+
+        // Copy each pixel from the private buffer to the shared image
+        for (int y = thread_data->start_row; y < thread_data->end_row; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                mlx_put_pixel(data->img, x, y, thread_data->private_buffer[buffer_index]);
+                buffer_index++;
+            }
+        }
+
+        // Free the private buffer after merging
+        free(thread_data->private_buffer);
+    }
+}
+
 
 // Modify t_render_data to include thread management
 // New function to handle rendering in threads
@@ -29,7 +48,8 @@ void *render_thread(void *arg)
     t_render_data *data = thread_data->render_data;
     t_color black = {0, 0, 0};
     t_color white = {255, 255, 255};
-
+    int buffer_index = 0; // Index into the private buffer
+       gettimeofday(&data->start_time, NULL);
     for (int y = thread_data->start_row; y < thread_data->end_row; y++)
     {
         for (int x = 0; x < WIDTH; x++)
@@ -140,19 +160,20 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
             // Similar checks for cylinders and planes...
             // (Copy your existing intersection checks here)
 
-            if (hit)
-            {
+            if (hit) {
                 uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
-                pthread_mutex_lock(&data->mutex);
-                mlx_put_pixel(data->img, x, y, color);
-                pthread_mutex_unlock(&data->mutex);
+                thread_data->private_buffer[buffer_index] = color; // Write to private buffer
+            } else {
+                thread_data->private_buffer[buffer_index] = 0; // Write black pixel
             }
+            buffer_index++;
         }
     }
     // Update thread completion count
     pthread_mutex_lock(&data->mutex);
     data->threads_completed++;
-    
+    pthread_mutex_unlock(&data->mutex);
+
     // If this is the last thread to complete
     if (data->threads_completed == NUM_THREADS)
     {
@@ -167,7 +188,7 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
         // Set the finished flag instead of exiting
         data->rendering_finished = 1;
     }
-    pthread_mutex_unlock(&data->mutex);
+    // pthread_mutex_unlock(&data->mutex);
 
     free(thread_data);
     return NULL;
@@ -241,171 +262,171 @@ t_vector world_to_local(t_vector point, t_vector orientation, t_vector center)
 }
 
 
-void render_next_row(void *param)
-{
-    t_color black = {0, 0, 0}; // Black
-    t_color white = {255, 255, 255}; // White
-    t_render_data *data = (t_render_data *)param;
-    int i;
-    unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
+// void render_next_row(void *param)
+// {
+//     t_color black = {0, 0, 0}; // Black
+//     t_color white = {255, 255, 255}; // White
+//     t_render_data *data = (t_render_data *)param;
+//     int i;
+//     unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
     
-    // Render the current row
-    // printf("HEIGHT is: %i\ncurrent_row: %i\n", HEIGHT, data->current_row);
-    if (data->current_row < HEIGHT)
-    {
-        for (int x = 0; x < WIDTH; x++)
-        {
-            t_ray ray = create_ray(x, data->current_row, &data->scene->camera);
-            double t;
-            int hit = 0;
-            t_color final_color = {0, 0, 0};
-            for (i = 0; i < data->scene->num_spheres; i++)
-            {
-  if (intersect_sphere(&ray, &data->scene->spheres[i], &t))
-{
-    hit = 1;
-    t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-    t_vector normal = normalize(subtract(hit_point, data->scene->spheres[i].center));
+//     // Render the current row
+//     // printf("HEIGHT is: %i\ncurrent_row: %i\n", HEIGHT, data->current_row);
+//     if (data->current_row < HEIGHT)
+//     {
+//         for (int x = 0; x < WIDTH; x++)
+//         {
+//             t_ray ray = create_ray(x, data->current_row, &data->scene->camera);
+//             double t;
+//             int hit = 0;
+//             t_color final_color = {0, 0, 0};
+//             for (i = 0; i < data->scene->num_spheres; i++)
+//             {
+//   if (intersect_sphere(&ray, &data->scene->spheres[i], &t))
+// {
+//     hit = 1;
+//     t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
+//     t_vector normal = normalize(subtract(hit_point, data->scene->spheres[i].center));
     
-    if (data->scene->spheres[i].checker == 1)
-    {
-        // Calculate UV coordinates for the sphere
-        t_vector local_point = subtract(hit_point, data->scene->spheres[i].center);
-        double u = 0.5 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-        double v = 0.5 - asin(local_point.y / data->scene->spheres[i].radius) / M_PI;
+//     if (data->scene->spheres[i].checker == 1)
+//     {
+//         // Calculate UV coordinates for the sphere
+//         t_vector local_point = subtract(hit_point, data->scene->spheres[i].center);
+//         double u = 0.5 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+//         double v = 0.5 - asin(local_point.y / data->scene->spheres[i].radius) / M_PI;
 
-        // Checkerboard pattern scaling
-        int check_u = (int)(u * 10.0) % 2;  // Adjust `10.0` to control size of pattern
-        int check_v = (int)(v * 10.0) % 2;
+//         // Checkerboard pattern scaling
+//         int check_u = (int)(u * 10.0) % 2;  // Adjust `10.0` to control size of pattern
+//         int check_v = (int)(v * 10.0) % 2;
 
-        // Determine the checker color
-        t_color object_color;
-        if (check_u == check_v)
-            object_color = white;
-        else
-            object_color = black;
+//         // Determine the checker color
+//         t_color object_color;
+//         if (check_u == check_v)
+//             object_color = white;
+//         else
+//             object_color = black;
 
-        // Apply lighting to the checkerboard pattern
-        final_color = apply_lighting(hit_point, normal, object_color, data->scene);
-    }
-    else
-    {
-        // Default sphere color without checkerboard pattern
-        final_color = apply_lighting(hit_point, normal, data->scene->spheres[i].color, data->scene);
-    }
+//         // Apply lighting to the checkerboard pattern
+//         final_color = apply_lighting(hit_point, normal, object_color, data->scene);
+//     }
+//     else
+//     {
+//         // Default sphere color without checkerboard pattern
+//         final_color = apply_lighting(hit_point, normal, data->scene->spheres[i].color, data->scene);
+//     }
 
-    break;
-}
+//     break;
+// }
 
-            }
-            for (i = 0; i <= data->scene->num_cylinders; i++)
-            {
-                double t_cy;
-if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy < t))
-{
-    hit = 1;
-    t = t_cy;
-    t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-    t_vector normal = normalize(subtract(hit_point, data->scene->cylinders[i].center));
+//             }
+//             for (i = 0; i <= data->scene->num_cylinders; i++)
+//             {
+//                 double t_cy;
+// if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy < t))
+// {
+//     hit = 1;
+//     t = t_cy;
+//     t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
+//     t_vector normal = normalize(subtract(hit_point, data->scene->cylinders[i].center));
 
-    if (data->scene->cylinders[i].checker == 1)
-    {
-        // Transform hit_point to the cylinder's local coordinate system
-        t_vector local_point = world_to_local(hit_point, data->scene->cylinders[i].orientation, data->scene->cylinders[i].center);
+//     if (data->scene->cylinders[i].checker == 1)
+//     {
+//         // Transform hit_point to the cylinder's local coordinate system
+//         t_vector local_point = world_to_local(hit_point, data->scene->cylinders[i].orientation, data->scene->cylinders[i].center);
 
-        // Cylindrical UV mapping in local space
-        double theta = atan2(local_point.z, local_point.x);
-        double u = 0.5 + theta / (2 * M_PI); // Maps theta [-pi, pi] to [0, 1]
-        double v = local_point.y / data->scene->cylinders[i].height; // Scaled along height
+//         // Cylindrical UV mapping in local space
+//         double theta = atan2(local_point.z, local_point.x);
+//         double u = 0.5 + theta / (2 * M_PI); // Maps theta [-pi, pi] to [0, 1]
+//         double v = local_point.y / data->scene->cylinders[i].height; // Scaled along height
 
-        // Scale the checker pattern
-        double scale = 10.0; // Adjust scale to fit your scene
-        double scaled_u = u * scale;
-        double scaled_v = v * scale;
+//         // Scale the checker pattern
+//         double scale = 10.0; // Adjust scale to fit your scene
+//         double scaled_u = u * scale;
+//         double scaled_v = v * scale;
 
-        int check_u = (int)scaled_u % 2;
-        int check_v = (int)scaled_v % 2;
+//         int check_u = (int)scaled_u % 2;
+//         int check_v = (int)scaled_v % 2;
 
-        // Checkerboard color
-        t_color base_color = (check_u == check_v) ? white : black;
+//         // Checkerboard color
+//         t_color base_color = (check_u == check_v) ? white : black;
 
-        // Apply lighting
-        final_color = apply_lighting(hit_point, normal, base_color, data->scene);
-    }
-    else
-    {
-        // Default cylinder color
-        final_color = apply_lighting(hit_point, normal, data->scene->cylinders[i].color, data->scene);
-    }
+//         // Apply lighting
+//         final_color = apply_lighting(hit_point, normal, base_color, data->scene);
+//     }
+//     else
+//     {
+//         // Default cylinder color
+//         final_color = apply_lighting(hit_point, normal, data->scene->cylinders[i].color, data->scene);
+//     }
 
-    break;
-}
+//     break;
+// }
 
 
 
-            }
-            for (int i = 0; i < data->scene->num_planes; i++)
-            {
-                double t_plane;
+//             }
+//             for (int i = 0; i < data->scene->num_planes; i++)
+//             {
+//                 double t_plane;
 
-                if (intersect_plane(&ray, &data->scene->planes[i], &t_plane) && (!hit || t_plane < t))
-                {
-                    hit = 1;
-                    t = t_plane;
-                    t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-                    t_vector normal = data->scene->planes[i].normal;
+//                 if (intersect_plane(&ray, &data->scene->planes[i], &t_plane) && (!hit || t_plane < t))
+//                 {
+//                     hit = 1;
+//                     t = t_plane;
+//                     t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
+//                     t_vector normal = data->scene->planes[i].normal;
                     
-                    if(data->scene->planes[i].checker == 1)
-                    {
-                        t_color object_color = get_checkerboard_color(hit_point, black, white, 1.0);
-                        final_color = apply_lighting(hit_point, normal, object_color, data->scene);
-                    }
-                    else
-					{
-                        final_color = apply_lighting(hit_point, normal, data->scene->planes[i].color, data->scene);
+//                     if(data->scene->planes[i].checker == 1)
+//                     {
+//                         t_color object_color = get_checkerboard_color(hit_point, black, white, 1.0);
+//                         final_color = apply_lighting(hit_point, normal, object_color, data->scene);
+//                     }
+//                     else
+// 					{
+//                         final_color = apply_lighting(hit_point, normal, data->scene->planes[i].color, data->scene);
                     
-					}// color = ft_pixel((final_color.r/255)*scene->planes[i].color.r, (final_color.g/255)*scene->planes[i].color.g, (final_color.b/255)*scene->planes[i].color.b,0XFF );
-                }
-        }
-        if (hit)
-        {
-            // color = ft_pixel(scene->spheres[i].color.r, scene->spheres[i].color.g, scene->spheres[i].color.b,0XFF );
-            // color_temp = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
-            // color = color * color_temp;
-            uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
-            mlx_put_pixel(data->img, x, data->current_row, color); // Red silhouette
-        }
-        // else
-        // {
-        //     uint32_t color = ft_pixel(
-        //     rand() % 0xFF, // R
-    	//     rand() % 0xFF, // G
-		//     rand() % 0xFF, // B
-		//     rand() % 0xFF  // A
-        //     );
-        //     mlx_put_pixel(data->img, x, data->current_row, color);    
-        // }
-    }
-    data->current_row++;
-    // Update the window with the current image
-        mlx_image_to_window(data->mlx, data->img, 0, 0);
-    }
-    else
-    {
-        gettimeofday(&data->end_time, NULL);
-        data->render_complete = 1;
-        double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
-        printf("Rendering took %f seconds\n", elapsed_time);
-        // unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
-        // unsigned char* raw_image_data = (unsigned char*)data->img->pixels;
-        save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
-        // Clean up
-        free(image_data);
-        mlx_terminate(data->mlx);
-        free(data);
-        exit(0);
-    }
-}
+// 					}// color = ft_pixel((final_color.r/255)*scene->planes[i].color.r, (final_color.g/255)*scene->planes[i].color.g, (final_color.b/255)*scene->planes[i].color.b,0XFF );
+//                 }
+//         }
+//         if (hit)
+//         {
+//             // color = ft_pixel(scene->spheres[i].color.r, scene->spheres[i].color.g, scene->spheres[i].color.b,0XFF );
+//             // color_temp = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
+//             // color = color * color_temp;
+//             uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
+//             mlx_put_pixel(data->img, x, data->current_row, color); // Red silhouette
+//         }
+//         // else
+//         // {
+//         //     uint32_t color = ft_pixel(
+//         //     rand() % 0xFF, // R
+//     	//     rand() % 0xFF, // G
+// 		//     rand() % 0xFF, // B
+// 		//     rand() % 0xFF  // A
+//         //     );
+//         //     mlx_put_pixel(data->img, x, data->current_row, color);    
+//         // }
+//     }
+//     data->current_row++;
+//     // Update the window with the current image
+//         mlx_image_to_window(data->mlx, data->img, 0, 0);
+//     }
+//     else
+//     {
+//         gettimeofday(&data->end_time, NULL);
+//         data->render_complete = 1;
+//         double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
+//         printf("Rendering took %f seconds\n", elapsed_time);
+//         // unsigned char* image_data = malloc(WIDTH * HEIGHT * 4); // Allocate RGBA image buffer
+//         // unsigned char* raw_image_data = (unsigned char*)data->img->pixels;
+//         save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
+//         // Clean up
+//         free(image_data);
+//         mlx_terminate(data->mlx);
+//         free(data);
+//         exit(0);
+//     }
+// }
 
 void update_display(void *param)
 {
@@ -414,57 +435,65 @@ void update_display(void *param)
     mlx_image_to_window(data->mlx, data->img, 0, 0);
     
     // Check if rendering is finished
-    pthread_mutex_lock(&data->mutex);
+    // pthread_mutex_lock(&data->mutex);
     if (data->rendering_finished)
     {
         // Clean up and terminate
         mlx_terminate(data->mlx);
-        pthread_mutex_unlock(&data->mutex);
-        pthread_mutex_destroy(&data->mutex);
+        // pthread_mutex_unlock(&data->mutex);
+        // pthread_mutex_destroy(&data->mutex);
         free(data);
         exit(0);
     }
     pthread_mutex_unlock(&data->mutex);
 }
 
+void render_scene(t_render_data *data) {
+    pthread_t threads[NUM_THREADS];
+    t_thread_data *thread_data_array[NUM_THREADS];
 
-void render_scene(mlx_t *mlx, t_scene *scene)
-{
-    mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
-    if (!img)
-        exit_with_error("Error creating image");
+    // Divide work among threads and initialize thread data
+    int rows_per_thread = HEIGHT / NUM_THREADS;
 
-    t_render_data *data = malloc(sizeof(t_render_data));
-    if (!data) {
-        perror("Error allocating render data");
-        exit(EXIT_FAILURE);
-    }
-
-    // Initialize render data
-    data->mlx = mlx;
-    data->img = img;
-    data->scene = scene;
-    data->threads_completed = 0;
-    data->rendering_finished = 0;  // Initialize the flag
-    pthread_mutex_init(&data->mutex, NULL);
-    gettimeofday(&data->start_time, NULL);
-
-    mlx_loop_hook(mlx, update_display, data);
-
-    // Create threads
-    const int num_threads = 8;  // Consider making this a #define NUM_THREADS
-    pthread_t threads[num_threads];
-    int rows_per_thread = HEIGHT / num_threads;
-
-    for (int i = 0; i < num_threads; i++) {
+    for (int i = 0; i < NUM_THREADS; i++) {
         t_thread_data *thread_data = malloc(sizeof(t_thread_data));
+        if (!thread_data) {
+            perror("Error allocating thread data");
+            exit(EXIT_FAILURE);
+        }
+
         thread_data->render_data = data;
         thread_data->start_row = i * rows_per_thread;
-        thread_data->end_row = (i == num_threads - 1) ? HEIGHT : (i + 1) * rows_per_thread;
-        
-        pthread_create(&threads[i], NULL, render_thread, thread_data);
+        thread_data->end_row = (i == NUM_THREADS - 1) ? HEIGHT : (i + 1) * rows_per_thread;
+
+        // Allocate private buffer for this thread
+        int num_pixels = WIDTH * (thread_data->end_row - thread_data->start_row);
+        thread_data->private_buffer = malloc(num_pixels * sizeof(uint32_t));
+        if (!thread_data->private_buffer) {
+            perror("Error allocating private buffer");
+            exit(EXIT_FAILURE);
+        }
+
+        thread_data_array[i] = thread_data; // Store for later merging
+
+        // Create thread
+        if (pthread_create(&threads[i], NULL, render_thread, thread_data) != 0) {
+            perror("Error creating thread");
+            exit(EXIT_FAILURE);
+        }
     }
 
-    // Start the MLX loop
-    mlx_loop(mlx);
+    // Wait for all threads to complete
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    // Merge private buffers into the shared image
+    merge_buffers(data, thread_data_array);
+
+    // Free thread_data structures
+    for (int i = 0; i < NUM_THREADS; i++) {
+        free(thread_data_array[i]); // Free the struct itself, not the buffer (already freed in merge_buffers)
+    }
 }
+

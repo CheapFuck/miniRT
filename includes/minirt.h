@@ -14,13 +14,15 @@
 # include "utils.h"
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
-
+# include <sys/time.h>
+# include <pthread.h>
 
 #define WIDTH  640
 #define HEIGHT 480
-#define NUM_THREADS 8
+#define NUM_THREADS 3
 
-void    render_scene(mlx_t *mlx, t_scene *scene);
+// void    render_scene(t_render_data *data);
+// void    render_scene(mlx_t *mlx, t_scene *scene);
 void    exit_with_error(const char *msg);
 int     main(int argc, char **argv);
 #endif // MINIRT_H
