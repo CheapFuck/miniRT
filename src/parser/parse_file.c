@@ -29,7 +29,8 @@ void parse_file(const char *filename, t_scene *scene)
         exit_with_error("Error opening file");
 
     char *line;
-    while ((line = read_line(fd)) != NULL) {
+    while ((line = read_line(fd)) != NULL)
+    {
         printf("Parsing line: %s\n", line);
         if (ft_strncmp(line, "A ", 2) == 0)
             parse_ambient(line, scene);
@@ -42,6 +43,8 @@ void parse_file(const char *filename, t_scene *scene)
         // Add other parsing functions here (plane, cylinder, etc.)
         else if (ft_strncmp(line, "pl ", 3) == 0)
             parse_plane(line, scene);
+        else if (ft_strncmp(line, "\n", 2) == 0)
+            continue ;
         else if (ft_strncmp(line, "cy ", 3) == 0)
         {
             printf("Detected cylinder: %s\n", line);

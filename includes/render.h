@@ -20,9 +20,17 @@ void render_next_row(void *param);
 t_vector cross(t_vector a, t_vector b);
 t_vector world_to_local(t_vector point, t_vector orientation, t_vector center);
 t_ray create_ray(int x, int y, t_camera *camera);
-uint32_t trace_ray(t_ray ray, t_scene *scene);
-t_color blend_colors(t_color color1, t_color color2, float ratio);
-t_vector refract_ray(t_vector I, t_vector N, float n1, float n2);
+// uint32_t trace_ray(t_ray ray, t_scene *scene);
+uint32_t trace_ray(t_ray ray, t_scene *scene, int depth);
+// t_color blend_colors(t_color color1, t_color color2, float ratio);
+t_color blend_colors(t_color reflected, t_color refracted, float R);
+// t_vector refract_ray(t_vector I, t_vector N, float n1, float n2);
+t_vector refract(t_vector I, t_vector N, float n1, float n2);
+t_vector reflect(t_vector direction, t_vector normal);
 t_color calculate_transparency(t_vector hit_point, t_vector normal, t_ray ray, t_scene *scene, float transparency, float ior);
+float fresnel(t_vector I, t_vector N, float n1, float n2);
+int intersect_scene(t_ray ray, t_scene *scene, t_hit_record *hit);
+t_color uint32_to_t_color(uint32_t color);
+uint32_t t_color_to_uint32(t_color color);
 
 #endif // RENDER_H

@@ -22,6 +22,19 @@ typedef struct s_ray {
     t_vector direction;
 } t_ray;
 
+typedef struct s_material {
+    float transparency; // 0 (opaque) to 1 (fully transparent)
+    float refractive_index; // Index of refraction (e.g., 1.0 for air, 1.5 for glass)
+    float reflectivity;      // 0.0 (no reflection) to 1.0 (perfect mirror)
+} t_material;
+
+typedef struct s_object {
+    t_vector position;
+    t_color color;
+    t_material material;
+    // Add other object-specific properties like radius for spheres
+} t_object;
+
 // Vector operations
 t_vector subtract(t_vector a, t_vector b);
 double dot(t_vector a, t_vector b);

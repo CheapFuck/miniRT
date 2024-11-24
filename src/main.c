@@ -18,7 +18,17 @@ int main(int argc, char **argv)
         exit_with_error("Error initializing MLX42");
 
     // Load and parse the scene
-      t_scene scene;
+    t_scene scene;
+//     scene.spheres = malloc(sizeof(t_sphere) * 10);
+//     if (!scene.spheres) {
+//     perror("Failed to allocate memory for spheres");
+//     exit(1);
+// }
+scene.spheres = malloc(sizeof(t_sphere) * 10);
+if (!scene.spheres) {
+    perror("Failed to allocate memory for spheres");
+    exit(1);
+}
     scene.num_spheres = 0;
     scene.num_cylinders = 0;
     scene.num_lights = 0;

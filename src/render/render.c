@@ -23,12 +23,91 @@ typedef struct s_thread_data {
 
 // Modify t_render_data to include thread management
 // New function to handle rendering in threads
+
+uint32_t t_color_to_uint32(t_color color) {
+    return ((uint32_t)color.r << 24) | ((uint32_t)color.g << 16) | ((uint32_t)color.b << 8) | 0xFF;
+}
+int intersect_scene(t_ray ray, t_scene *scene, t_hit_record *hit) {
+    t_hit_record temp_hit;
+    int found_intersection = 0;
+
+    temp_hit.t = INFINITY;
+
+    // Check for intersections with spheres
+    for (int i = 0; i < scene->num_spheres; i++) {
+        double t;
+        if (intersect_sphere(&ray, &scene->spheres[i], &t) && t < temp_hit.t) {
+            found_intersection = 1;
+            temp_hit.t = t;
+            temp_hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
+            temp_hit.normal = normalize(subtract(temp_hit.point, scene->spheres[i].position));
+            temp_hit.color = scene->spheres[i].color;
+            temp_hit.material = scene->spheres[i].material;
+        }
+    }
+
+    // (Optional) Add similar checks for cylinders, planes, etc.
+
+    if (found_intersection) {
+        *hit = temp_hit; // Update the main hit record
+    }
+
+    return found_intersection; // Return whether an intersection was found
+}
+
+
+uint32_t trace_ray(t_ray ray, t_scene *scene, int depth) {
+    if (depth <= 0) {
+        return 0x000000FF; // Background color, or default color
+    }
+
+    t_hit_record hit;
+    hit.t = INFINITY;
+    hit.hit = 0;
+
+    if (intersect_scene(ray, scene, &hit)) {
+        t_color final_color = apply_lighting(hit.point, hit.normal, hit.color, scene);
+
+        // Reflection calculation (if the material is reflective)
+        if (hit.material.reflectivity > 0.0) {
+            t_vector reflected_dir = reflect(ray.direction, hit.normal);
+            t_ray reflected_ray = {hit.point, reflected_dir};
+
+            // Recursively trace the reflected ray with reduced depth
+            uint32_t reflected_color = trace_ray(reflected_ray, scene, depth - 1);
+
+            // Blend the reflected color based on reflectivity
+            final_color = blend_colors(final_color, uint32_to_t_color(reflected_color), hit.material.reflectivity);
+        }
+
+        return t_color_to_uint32(final_color); // Convert to uint32_t for rendering
+    }
+
+    return 0x000000FF; // Background color
+}
+
+t_color uint32_to_t_color(uint32_t color) {
+    return (t_color){
+        .r = (color >> 24) & 0xFF,
+        .g = (color >> 16) & 0xFF,
+        .b = (color >> 8) & 0xFF
+    };
+}
+
+
+
 void *render_thread(void *arg)
 {
+    int depth;
     t_thread_data *thread_data = (t_thread_data *)arg;
     t_render_data *data = thread_data->render_data;
     t_color black = {0, 0, 0};
     t_color white = {255, 255, 255};
+
+
+    t_hit_record hit;
+    hit.hit = 0;
+    depth = 3;
 
     for (int y = thread_data->start_row; y < thread_data->end_row; y++)
     {
@@ -36,21 +115,22 @@ void *render_thread(void *arg)
         {
             t_ray ray = create_ray(x, y, &data->scene->camera);
             double t;
-            int hit = 0;
+            hit.hit = 0;
             t_color final_color = {0, 0, 0};
+
 
             // Check sphere intersections
             for (int i = 0; i < data->scene->num_spheres; i++)
             {
                 if (intersect_sphere(&ray, &data->scene->spheres[i], &t))
                 {
-                    hit = 1;
-                    t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
-                    t_vector normal = normalize(subtract(hit_point, data->scene->spheres[i].center));
+                    hit.hit = 1;
+                    hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
+                    t_vector normal = normalize(subtract(hit.point, data->scene->spheres[i].center));
                     
                     if (data->scene->spheres[i].checker == 1)
                     {
-                        t_vector local_point = subtract(hit_point, data->scene->spheres[i].center);
+                        t_vector local_point = subtract(hit.point, data->scene->spheres[i].center);
                         double u = 0.5 + atan2(local_point.z, local_point.x) / (2 * M_PI);
                         double v = 0.5 - asin(local_point.y / data->scene->spheres[i].radius) / M_PI;
                         
@@ -58,11 +138,23 @@ void *render_thread(void *arg)
                         int check_v = (int)(v * 10.0) % 2;
                         
                         t_color object_color = (check_u == check_v) ? white : black;
-                        final_color = apply_lighting(hit_point, normal, object_color, data->scene);
+                        final_color = apply_lighting(hit.point, normal, object_color, data->scene);
                     }
                     else
                     {
-                        final_color = apply_lighting(hit_point, normal, data->scene->spheres[i].color, data->scene);
+                        final_color = apply_lighting(hit.point, hit.normal, hit.color, data->scene);
+                         if (hit.material.reflectivity > 0.0)
+                         {
+                            t_vector reflected_dir = reflect(ray.direction, hit.normal);
+                            t_ray reflected_ray = {hit.point, reflected_dir};
+
+                            // Recursively trace the reflected ray
+                            uint32_t reflected_color = trace_ray(reflected_ray, data->scene, depth - 1);
+
+                            // Blend the reflected color based on reflectivity
+                            final_color = blend_colors(final_color, uint32_to_t_color(reflected_color), hit.material.reflectivity);
+                        }
+                        // final_color = apply_lighting(hit_point, normal, data->scene->spheres[i].color, data->scene);
                     }
                     break;
                 }
@@ -70,9 +162,9 @@ void *render_thread(void *arg)
    for (int i = 0; i <= data->scene->num_cylinders; i++)
             {
                 double t_cy;
-if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy < t))
+if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit.hit || t_cy < t))
 {
-    hit = 1;
+    hit.hit = 1;
     t = t_cy;
     t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
     t_vector normal = normalize(subtract(hit_point, data->scene->cylinders[i].center));
@@ -117,9 +209,9 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
             {
                 double t_plane;
 
-                if (intersect_plane(&ray, &data->scene->planes[i], &t_plane) && (!hit || t_plane < t))
+                if (intersect_plane(&ray, &data->scene->planes[i], &t_plane) && (!hit.hit || t_plane < t))
                 {
-                    hit = 1;
+                    hit.hit = 1;
                     t = t_plane;
                     t_vector hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
                     t_vector normal = data->scene->planes[i].normal;
@@ -140,7 +232,7 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
             // Similar checks for cylinders and planes...
             // (Copy your existing intersection checks here)
 
-            if (hit)
+            if (hit.hit)
             {
                 uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
                 pthread_mutex_lock(&data->mutex);
@@ -174,6 +266,13 @@ if (intersect_cylinder(&ray, &data->scene->cylinders[i], &t_cy) && (!hit || t_cy
 }
 
 
+t_color blend_colors(t_color original_color, t_color reflected_color, float reflectivity) {
+    return (t_color) {
+        .r = reflectivity * reflected_color.r + (1 - reflectivity) * original_color.r,
+        .g = reflectivity * reflected_color.g + (1 - reflectivity) * original_color.g,
+        .b = reflectivity * reflected_color.b + (1 - reflectivity) * original_color.b
+    };
+}
 
 
 // typedef struct s_render_data{
@@ -427,6 +526,10 @@ void update_display(void *param)
     pthread_mutex_unlock(&data->mutex);
 }
 
+t_vector reflect(t_vector direction, t_vector normal) {
+    double dot_product = dot(direction, normal);
+    return subtract(direction, multiply_scalar(normal, 2.0 * dot_product));
+}
 
 void render_scene(mlx_t *mlx, t_scene *scene)
 {
@@ -452,7 +555,7 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     mlx_loop_hook(mlx, update_display, data);
 
     // Create threads
-    const int num_threads = 8;  // Consider making this a #define NUM_THREADS
+    const int num_threads = NUM_THREADS;  // Consider making this a #define NUM_THREADS
     pthread_t threads[num_threads];
     int rows_per_thread = HEIGHT / num_threads;
 

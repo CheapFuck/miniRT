@@ -36,6 +36,8 @@ void parse_light(char *line, t_scene *scene) {
         ft_free_split(tokens);
         exit_with_error("Invalid light color format");
     }
+
+
     light.color.r = ft_atoi(color[0]);
     light.color.g = ft_atoi(color[1]);
     light.color.b = ft_atoi(color[2]);
@@ -49,7 +51,6 @@ void parse_light(char *line, t_scene *scene) {
     ft_free_split(color);
 
     // Add the light to the scene
-    printf("num_lights = %d\n", scene->num_lights);
     scene->lights[scene->num_lights] = light;
     scene->num_lights++;
     printf("Light added, num_lights = %d\n", scene->num_lights);
