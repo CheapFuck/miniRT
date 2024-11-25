@@ -452,7 +452,7 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     mlx_loop_hook(mlx, update_display, data);
 
     // Create threads
-    const int num_threads = 8;  // Consider making this a #define NUM_THREADS
+    const int num_threads = NUM_THREADS;  // Consider making this a #define NUM_THREADS
     pthread_t threads[num_threads];
     int rows_per_thread = HEIGHT / num_threads;
 
