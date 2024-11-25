@@ -6,7 +6,7 @@ void parse_sphere(char *line, t_scene *scene) {
     t_sphere sphere;
     char **tokens = ft_split(line, ' ');
     printf("1pling plong\n");
-    if (!tokens || ft_arraylen(tokens) != 5)
+    if (!tokens /*|| ft_arraylen(tokens) != 5*/)
         exit_with_error("Invalid sphere format");
     printf("2pling plong\n");
     char **pos = ft_split(tokens[1], ',');
@@ -22,6 +22,7 @@ void parse_sphere(char *line, t_scene *scene) {
     sphere.color.b = ft_atoi(colors[2]);
     printf("5pling plong\n");
     sphere.checker = ft_atoi(tokens[4]);
+    sphere.reflectivity = ft_atof(tokens[5]);
     printf("6pling plong\n");
     // scene->spheres[scene->num_spheres++] = sphere;
     printf("7num_speres = %d\n", scene->num_spheres);

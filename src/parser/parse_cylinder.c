@@ -78,6 +78,7 @@ void parse_cylinder(char *line, t_scene *scene)
     clean_2d_array(color_tokens);
 
     cylinder.checker = ft_atoi(tokens[6]);
+    cylinder.reflectivity = ft_atof(tokens[7]);
 
 
     // Calculate the radius

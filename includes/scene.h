@@ -21,6 +21,7 @@ typedef struct s_plane {
     t_vector normal;
     t_color color;
     bool checker;
+    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_plane;
 
 
@@ -32,6 +33,7 @@ typedef struct s_cylinder {
     double radius;
     t_color color;
     bool checker;
+    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_cylinder;
 
 
@@ -41,7 +43,7 @@ typedef struct s_sphere {
     t_color color; // Add this field to store the sphere's color
     double shininess;
     bool checker;
-
+    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_sphere;
 
 typedef struct s_scene {

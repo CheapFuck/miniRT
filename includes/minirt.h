@@ -18,9 +18,20 @@
 
 #define WIDTH  640
 #define HEIGHT 480
-#define NUM_THREADS 8
+#define NUM_THREADS 12
 
 void    render_scene(mlx_t *mlx, t_scene *scene);
 void    exit_with_error(const char *msg);
 int     main(int argc, char **argv);
+
+
+// Add the object type enum
+typedef enum e_object_type {
+    SPHERE,
+    CYLINDER,
+    PLANE
+} t_object_type;
+
+
 #endif // MINIRT_H
+

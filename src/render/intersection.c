@@ -1,4 +1,4 @@
-#include "minirt.h"
+#include "../../includes/minirt.h"
 
 // Check if a ray intersects a sphere
 int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
@@ -8,7 +8,6 @@ int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
     double b = 2.0 * dot(oc, ray->direction);
     double c = dot(oc, oc) - (sphere->radius * sphere->radius);
     double discriminant = b * b - 4 * a * c;
-
     // If the discriminant is negative, there's no intersection
     if (discriminant < 0)
         return 0;
@@ -27,6 +26,12 @@ int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
         *t = t2;
     else
         return 0;
+    // printf("a: %f, b: %f, c: %f, discriminant: %f\n", a, b, c, discriminant);
+    // printf("Ray: Origin (%f, %f, %f), Direction (%f, %f, %f)\n", 
+    // ray->origin.x, ray->origin.y, ray->origin.z, 
+    //    ray->direction.x, ray->direction.y, ray->direction.z);
+
+    // printf("Sphere: Center (%f, %f, %f), Radius %f\n", sphere->center.x, sphere->center.y, sphere->center.z, sphere->radius);
 
     // Ensure that the intersection is in front of the camera
     return (*t > 0);
