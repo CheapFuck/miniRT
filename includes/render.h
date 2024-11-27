@@ -27,5 +27,8 @@ t_vector refract_ray(t_vector I, t_vector N, float n1, float n2);
 t_color calculate_transparency(t_vector hit_point, t_vector normal, t_ray ray, t_scene *scene, float transparency, float ior);
 t_ray get_reflection_ray(t_vector hit_point, t_vector normal, t_ray incident_ray);
 t_vector get_cylinder_normal(t_vector hit_point, t_cylinder *cylinder);
+// double calculate_fresnel(t_vector incident, t_vector normal, double ior);
+double calculate_fresnel(t_vector incident, t_vector normal);
+
 
 #endif // RENDER_H
