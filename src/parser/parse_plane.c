@@ -64,14 +64,14 @@ void parse_plane(char *line, t_scene *scene) {
         clean_2d_array(tokens);
         return;
     }
-    plane.color.r = ft_atoi(color_tokens[0]);
-    plane.color.g = ft_atoi(color_tokens[1]);
-    plane.color.b = ft_atoi(color_tokens[2]);
+    plane.material.color.r = ft_atoi(color_tokens[0]);
+    plane.material.color.g = ft_atoi(color_tokens[1]);
+    plane.material.color.b = ft_atoi(color_tokens[2]);
     clean_2d_array(color_tokens);
 
     // Parse checker and reflectivity
-    plane.checker = ft_atoi(tokens[4]);
-    plane.reflectivity = ft_atof(tokens[5]);
+    plane.material.checker = ft_atoi(tokens[4]);
+    plane.material.reflectivity = ft_atof(tokens[5]);
 
     // Add the plane to the scene
     if (scene->num_planes >= 65536) {

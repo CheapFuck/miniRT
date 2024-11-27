@@ -26,18 +26,12 @@ int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
         *t = t2;
     else
         return 0;
-    // printf("a: %f, b: %f, c: %f, discriminant: %f\n", a, b, c, discriminant);
-    // printf("Ray: Origin (%f, %f, %f), Direction (%f, %f, %f)\n", 
-    // ray->origin.x, ray->origin.y, ray->origin.z, 
-    //    ray->direction.x, ray->direction.y, ray->direction.z);
-
-    // printf("Sphere: Center (%f, %f, %f), Radius %f\n", sphere->center.x, sphere->center.y, sphere->center.z, sphere->radius);
-
-    // Ensure that the intersection is in front of the camera
+      // Ensure that the intersection is in front of the camera
     return (*t > 0);
 }
 
-int intersect_plane(t_ray *ray, t_plane *plane, double *t) {
+int intersect_plane(t_ray *ray, t_plane *plane, double *t)
+{
     // Calculate the dot product of the plane normal and the ray direction
     double denom = dot(plane->normal, ray->direction);
 
@@ -95,11 +89,13 @@ int intersect_cylinder(t_ray *ray, t_cylinder *cylinder, double *t)
 
     int hit = 0;
 
-    if (t1 > 0 && fabs(height1) <= cylinder->height / 2) {
+    if (t1 > 0 && fabs(height1) <= cylinder->height / 2)
+    {
         *t = t1;
         hit = 1;
     }
-    if (t2 > 0 && fabs(height2) <= cylinder->height / 2 && (!hit || t2 < *t)) {
+    if (t2 > 0 && fabs(height2) <= cylinder->height / 2 && (!hit || t2 < *t))
+    {
         *t = t2;
         hit = 1;
     }

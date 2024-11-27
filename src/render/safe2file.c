@@ -1,6 +1,4 @@
 #include "../../includes/minirt.h"
-// #include <stdio.h>
-// #include <stdlib.h>
 
 void save_image_to_file(const unsigned char* raw_image_data, unsigned width, unsigned height, const char* filename) {
     unsigned char* png_data = NULL; // Buffer for PNG data
@@ -19,13 +17,5 @@ void save_image_to_file(const unsigned char* raw_image_data, unsigned width, uns
     } else {
         printf("Image saved to %s\n", filename);
     }
-// unsigned char test_image[4 * 4 * 4] = { 
-//     255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 0, 255, 0, 255, 0, 255,
-//     0, 255, 0, 255, 255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 0, 255,
-//     255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 0, 255, 0, 255, 0, 255,
-//     0, 255, 0, 255, 255, 0, 0, 255, 0, 255, 0, 255, 255, 0, 0, 255
-// };
-// save_image_to_file(test_image, 4, 4, "test.png");
-    // Free the PNG data buffer
     free(png_data);
 }

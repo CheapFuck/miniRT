@@ -16,12 +16,23 @@ typedef struct s_light {
     double radius;       // Radius of the area light
 } t_light;
 
+typedef struct s_material
+{
+    double transparency;      // 0.0 (opaque) to 1.0 (fully transparent)
+    double refractive_index;  // Index of refraction (e.g., 1.0 for air, 1.5 for glass)
+    double reflectivity;      // 0.0 (no reflection) to 1.0 (fully reflective)
+    t_color color;
+    bool checker;
+} t_material;
+
+
 typedef struct s_plane {
     t_vector point;
     t_vector normal;
-    t_color color;
-    bool checker;
-    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
+    // t_color color;
+    t_material  material;
+    // bool checker;
+    // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_plane;
 
 
@@ -31,19 +42,21 @@ typedef struct s_cylinder {
     double diameter;
     double height;
     double radius;
-    t_color color;
-    bool checker;
-    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
+    t_material  material;
+    // t_color color;
+    // bool checker;
+    // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_cylinder;
 
 
 typedef struct s_sphere {
     t_vector center;
     double radius;
-    t_color color; // Add this field to store the sphere's color
-    double shininess;
-    bool checker;
-    double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
+    t_material  material;
+    // t_color color; // Add this field to store the sphere's color
+    // double shininess;
+    // bool checker;
+    // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_sphere;
 
 typedef struct s_scene {

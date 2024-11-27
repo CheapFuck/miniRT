@@ -72,13 +72,13 @@ void parse_cylinder(char *line, t_scene *scene)
         clean_2d_array(tokens);
         return;
     }
-    cylinder.color.r = ft_atoi(color_tokens[0]);
-    cylinder.color.g = ft_atoi(color_tokens[1]);
-    cylinder.color.b = ft_atoi(color_tokens[2]);
+    cylinder.material.color.r = ft_atoi(color_tokens[0]);
+    cylinder.material.color.g = ft_atoi(color_tokens[1]);
+    cylinder.material.color.b = ft_atoi(color_tokens[2]);
     clean_2d_array(color_tokens);
 
-    cylinder.checker = ft_atoi(tokens[6]);
-    cylinder.reflectivity = ft_atof(tokens[7]);
+    cylinder.material.checker = ft_atoi(tokens[6]);
+    cylinder.material.reflectivity = ft_atof(tokens[7]);
 
 
     // Calculate the radius

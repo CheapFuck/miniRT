@@ -63,23 +63,21 @@ int is_checkerboard(t_vector point, double scale)
     return ((int)(snapped_x / grid_size) + 
                        (int)(snapped_y / grid_size) + 
                        (int)(snapped_z / grid_size)) % 2;
-
-    // int x = (int)(floor(point.x / scale));
-    // int y = (int)(floor(point.y / scale));
-    // int z = (int)(floor(point.z / scale));
-    // return (x + y + z) % 2 == 0;
 }
 
 t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale) {
-    if (is_checkerboard(point, scale)) {
+    if (is_checkerboard(point, scale))
+    {
         return color1;
-    } else {
+    } else
+    {
         return color2;
     }
 }
 
 
-int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene) {
+int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
+{
     // Direction from the hit point to the light source
     t_vector light_dir = normalize(subtract(light.pos, hit_point));
     double light_distance = sqrt(dot(subtract(light.pos, hit_point), subtract(light.pos, hit_point)));
@@ -103,13 +101,20 @@ int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene) {
             return 1; // In shadow
         }
     }
+     for (int i = 0; i < scene->num_planes; i++) {
+        double t_shadow;
+        if (intersect_plane(&shadow_ray, &scene->planes[i], &t_shadow) && t_shadow < light_distance) {
+            return 1; // In shadow
+        }
+    }
 
     // TODO: Add checks for planes or other objects
 
     return 0; // Not in shadow
 }
 
-t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene) {
+t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene)
+{
     t_color light_contribution = {0, 0, 0};
 
     // Ambient lighting

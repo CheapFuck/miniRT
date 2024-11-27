@@ -39,7 +39,6 @@ void parse_file(const char *filename, t_scene *scene)
             parse_light(line, scene);
         else if (ft_strncmp(line, "sp ", 3) == 0)
             parse_sphere(line, scene);
-        // Add other parsing functions here (plane, cylinder, etc.)
         else if (ft_strncmp(line, "pl ", 3) == 0)
             parse_plane(line, scene);
         else if (ft_strncmp(line, "cy ", 3) == 0)
