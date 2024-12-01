@@ -16,16 +16,6 @@ typedef struct s_light {
     double radius;       // Radius of the area light
 } t_light;
 
-typedef struct s_material
-{
-    double transparency;      // 0.0 (opaque) to 1.0 (fully transparent)
-    double refractive_index;  // Index of refraction (e.g., 1.0 for air, 1.5 for glass)
-    double reflectivity;      // 0.0 (no reflection) to 1.0 (fully reflective)
-    t_color color;
-    bool checker;
-} t_material;
-
-
 typedef struct s_plane {
     t_vector point;
     t_vector normal;

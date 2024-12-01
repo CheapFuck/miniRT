@@ -139,7 +139,7 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
 
             // Specular lighting
             t_vector reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0 * dot(normal, light_dir)), light_dir));
-            double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 250) * light.brightness * shadow_factor; // 50 is the shininess factor
+            double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 50) * light.brightness * shadow_factor * 1; // 50 is the shininess factor
 
             // Add contributions to light
             light_contribution.r += 255 * (diffuse_intensity + specular_intensity);

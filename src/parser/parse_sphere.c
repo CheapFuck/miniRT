@@ -19,7 +19,7 @@ void parse_sphere(char *line, t_scene *scene) {
     sphere.material.checker = ft_atoi(tokens[4]);
     sphere.material.reflectivity = ft_atof(tokens[5]);
     sphere.material.transparency = ft_atof(tokens[6]);
-    sphere.material.refractive_index = ft_atof(tokens[6]);
+    sphere.material.refractive_index = ft_atof(tokens[7]);
     scene->spheres[scene->num_spheres] = sphere;
     scene->num_spheres++;
     printf("Sphere added, num_spheres = %d\n", scene->num_spheres);

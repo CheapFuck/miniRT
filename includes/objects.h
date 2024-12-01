@@ -1,3 +1,5 @@
+#include "minirt.h"
+
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
@@ -21,6 +23,35 @@ typedef struct s_ray {
     t_vector origin;
     t_vector direction;
 } t_ray;
+
+typedef struct s_material
+{
+    double transparency;      // 0.0 (opaque) to 1.0 (fully transparent)
+    double refractive_index;  // Index of refraction (e.g., 1.0 for air, 1.5 for glass)
+    double reflectivity;      // 0.0 (no reflection) to 1.0 (fully reflective)
+    t_color color;
+    bool checker;
+} t_material;
+
+// Add the object type enum
+typedef enum e_object_type {
+    SPHERE,
+    CYLINDER,
+    PLANE
+} t_object_type;
+
+typedef struct s_hit_record {
+    t_vector        point;          // Intersection point
+    t_vector        normal;         // Surface normal at the intersection
+    double          t;                // Distance from ray origin to intersection
+    t_color         color;           // Color of the object hit
+    t_material      material;     // Material properties (transparency, refractive index, etc.)
+    int             hit;                 // Boolean to indicate if an intersection occurred
+    int             index;
+    t_object_type   type;
+    bool          hit_from_inside;
+} t_hit_record;
+
 
 // Vector operations
 t_vector subtract(t_vector a, t_vector b);

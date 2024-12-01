@@ -72,7 +72,7 @@ void parse_plane(char *line, t_scene *scene) {
     // Parse checker and reflectivity
     plane.material.checker = ft_atoi(tokens[4]);
     plane.material.reflectivity = ft_atof(tokens[5]);
-
+printf("plane\n");
     // Add the plane to the scene
     if (scene->num_planes >= 65536) {
         printf("Error: Plane array is full\n");

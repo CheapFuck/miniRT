@@ -90,7 +90,7 @@ void parse_cylinder(char *line, t_scene *scene)
         clean_2d_array(tokens);
         return;
     }
-
+printf("cylinder\n");
     // Add the cylinder to the scene
     scene->cylinders[scene->num_cylinders] = cylinder;
     scene->num_cylinders++;
