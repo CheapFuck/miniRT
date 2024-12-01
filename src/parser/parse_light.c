@@ -49,10 +49,10 @@ void parse_light(char *line, t_scene *scene) {
     ft_free_split(color);
 
     // Add the light to the scene
-    printf("num_lights = %d\n", scene->num_lights);
+    // printf("num_lights = %d\n", scene->num_lights);
     scene->lights[scene->num_lights] = light;
     scene->num_lights++;
-    printf("Light added, num_lights = %d\n", scene->num_lights);
+    // printf("Light added, num_lights = %d\n", scene->num_lights);
 
     // Free the token array
     ft_free_split(tokens);

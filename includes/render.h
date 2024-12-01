@@ -24,11 +24,15 @@ t_ray create_ray(int x, int y, t_camera *camera);
 t_color trace_ray(t_ray ray, t_scene *scene, int depth);
 t_color blend_colors(t_color color1, t_color color2, float ratio);
 t_vector refract_ray(t_vector I, t_vector N, float n1, float n2);
+t_vector refract(t_vector incident, t_vector normal, float eta_ratio);
 t_color calculate_transparency(t_vector hit_point, t_vector normal, t_ray ray, t_scene *scene, float transparency, float ior);
 t_ray get_reflection_ray(t_vector hit_point, t_vector normal, t_ray incident_ray);
+t_vector reflect(t_vector direction, t_vector normal);
 t_vector get_cylinder_normal(t_vector hit_point, t_cylinder *cylinder);
 // double calculate_fresnel(t_vector incident, t_vector normal, double ior);
 double calculate_fresnel(t_vector incident, t_vector normal);
-
+t_color uint32_to_t_color(uint32_t color);
+t_color blend_colors(t_color original_color, t_color reflected_color, float reflectivity);
+double schlick_reflection_coefficient(double cos_theta, double refractive_index);
 
 #endif // RENDER_H
