@@ -80,6 +80,9 @@ void parse_cylinder(char *line, t_scene *scene)
     cylinder.material.checker = ft_atoi(tokens[6]);
     cylinder.material.reflectivity = ft_atof(tokens[7]);
 
+    cylinder.material.transparency = ft_atof(tokens[8]);
+    cylinder.material.refractive_index = ft_atof(tokens[9]);
+
 
     // Calculate the radius
     cylinder.radius = cylinder.diameter / 2.0;

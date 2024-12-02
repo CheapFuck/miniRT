@@ -113,8 +113,10 @@ int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
     return 0; // Not in shadow
 }
 
-t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene)
+t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene, int depth)
 {
+    if (depth > MAX_REFLECTION_DEPTH)
+        return ((t_color){0, 0, 0});
     t_color light_contribution = {0, 0, 0};
 
     // Ambient lighting

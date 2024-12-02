@@ -30,7 +30,7 @@ void parse_file(const char *filename, t_scene *scene)
 
     char *line;
     while ((line = read_line(fd)) != NULL) {
-        // printf("Parsing line: %s\n", line);
+        printf("Parsing line: %s\n", line);
         if (ft_strncmp(line, "A ", 2) == 0)
             parse_ambient(line, scene);
         else if (ft_strncmp(line, "C ", 2) == 0)

@@ -33,9 +33,6 @@ typedef struct s_cylinder {
     double height;
     double radius;
     t_material  material;
-    // t_color color;
-    // bool checker;
-    // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_cylinder;
 
 

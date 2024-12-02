@@ -1,0 +1,47 @@
+# # A       0.1         255,255,255
+# # C       0,0,-10     0,0,1       70
+# # L       0,10,0      0.3         255,255,255
+# # #Sphere     [XYZ]       [DIAMETER]  [RGB]       [Checker]   [Reflectivity]  [Transparency]  [Refractive Index]
+# # sp          -2,0,5      4           255,0,0     0           0.0             1.0             0.0    # Red glass sphere
+# # sp          2,0,5       4           0,0,255     0           0.0             1.0             0.0    # Blue glass sphere
+# # sp          0,0,15      4           0,255,0     0           0.0             1.0             0.0    # Green sphere behind
+# # sp          -5,0,10     4           0,0,255     0           0.0             1.0             0.0    # Blue sphere behind and to the left
+# # pl      0,-2,0      0,1,0       128,128,128 1    0.0    0.0    0.0
+# A           0.2     255,255,255
+# C           0,0,-10 0,0,1 70
+# L           -10,10,0 0.8 255,255,255
+# # Four spheres with different transparency values
+# sp          -6,0,5      4           255,0,0     0           0.1             1.0             2.1    # 100% transparent
+# sp          -2,0,5      4           255,0,0     0           0.2             0.8             1.0    # 50% transparent
+# sp          2,0,5       4           0,255,0     0           0.3             0.5             1.2    # 80% transparent
+# sp          6,0,5       4           0,0,255     0           0.4             0.3             1.5    # 30% transparent
+# pl          0,-2,0      0,1,0       128,128,128 1           0.0    
+# A           0.2     255,255,255
+# C           0,0,-10 0,0,1 70
+# L           -10,10,0 0.8 255,255,255
+# # Completely transparent sphere with refraction
+# sp          0,0,5       4           255,0,0     0           0.0             1.0             1.5    # Glass sphere
+# # Colorful objects behind to show the distortion
+# sp          -2,0,15     2           255,255,0   0           0.0             0.0             0.0    # Yellow sphere
+# sp          2,0,15      2           0,255,0     0           0.0             0.0             0.0    # Green sphere
+# pl          0,-2,0      0,1,0       128,128,128 1           0.0             0.0             0.0    # Floor
+A           0.2     255,255,255
+C           0,0,-10 0,0,1 70
+L           -10,10,0 0.8 255,255,255
+# Glass sphere
+# # #Sphere     [XYZ]       [DIAMETER]  [RGB]       [Checker]   [Reflectivity]  [Transparency]  [Refractive Index]
+# sp              0,0,5       4           255,0,0     0           1.0             1.0             1.5    
+# # Larger background objects
+# sp          -2,0,15     4           255,255,0   0           0.4             0.0             0.0    # Yellow sphere
+# sp          2,0,15      4           0,255,0     0           0.4             0.0             0.0    # Green sphere
+# pl          0,-2,0      0,1,0       128,128,128 1           0.0             0.0             0.0    # Floor
+# # Checkerboard pattern behind the sphere
+# pl          0,0,20      0,0,-1      255,255,255 1           0.0             0.0             0.0    
+# pl          0,-2,0      0,1,0       128,128,128 1           0.0             0.0             0.0    
+# # Colorful spheres closer to the glass
+# sp          -3,0,7      2           255,255,0   0           0.8             0.0             0.0    
+# sp          3,0,7       2           0,255,0     0           0.5             0.0             0.0    
+# sp          0,3,7       2           0,0,255     0           0.3             0.0             0.0    
+sp 0,0,5 2 255,0,0 0.0 1.5 0.8  // Sphere with reflectivity 0.8
+pl 0,-2,0 0,1,0 128,128,128 0.3 // Plane with reflectivity 0.3
+cy 2,0,5 0,1,0 1 4 0,255,0 0.5 // Cylinder with reflectivity 0.5

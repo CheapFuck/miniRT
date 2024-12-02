@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-#define MAX_REFLECTION_DEPTH 16
+// #define MAX_REFLECTION_DEPTH 16
 
 
 typedef struct s_render_data {
@@ -101,7 +101,7 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     t_hit_record hit;
     hit.t = INFINITY;
     hit.hit = 0;
-
+    t_color light_contribution = {0, 0, 0};
     // double t = INFINITY;
     // int hit = 0;
     t_color final_color = {0, 0, 0};
@@ -185,11 +185,13 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
                     int check_v = (int)(v * 10.0) % 2;
                     
                     t_color object_color = (check_u == check_v) ? white : black;
-                    final_color = apply_lighting(hit.point, normal, object_color, scene);
+                    
+                    final_color = apply_lighting(hit_point, normal, object_color, scene, depth + 1);
+                    // final_color = apply_lighting(hit.point, normal, object_color, scene);
                 }
                 else
                 {
-                    final_color = apply_lighting(hit_point, normal, sphere->material.color, scene);
+                    final_color = apply_lighting(hit_point, normal, sphere->material.color, scene, depth + 1);
                 }
                 // reflectivity = sphere->material.reflectivity;
                 // transparency = sphere->material.transparency;
@@ -206,26 +208,14 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
                 t_cylinder *cylinder = &scene->cylinders[hit.index];
                 normal = get_cylinder_normal(hit.point, cylinder);  // Make sure you have this function
                 
-                if (cylinder->material.checker == 1)
+               if (cylinder->material.checker == 1)
                 {
-                    t_vector local_point = world_to_local(hit.point, cylinder->orientation, cylinder->center);
-                    double theta = atan2(local_point.z, local_point.x);
-                    double u = 0.5 + theta / (2 * M_PI);
-                    double v = local_point.y / cylinder->height;
-                    
-                    double scale = 10.0;
-                    double scaled_u = u * scale;
-                    double scaled_v = v * scale;
-                    
-                    int check_u = (int)scaled_u % 2;
-                    int check_v = (int)scaled_v % 2;
-                    
-                    t_color base_color = (check_u == check_v) ? white : black;
-                    final_color = apply_lighting(hit.point, normal, base_color, scene);
+                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
                 {
-                    final_color = apply_lighting(hit.point, normal, cylinder->material.color, scene);
+                    final_color = apply_lighting(hit.point, normal, cylinder->material.color, scene, depth + 1);
                 }
                 hit.material.reflectivity = cylinder->material.reflectivity;
                 hit.material.transparency = cylinder->material.transparency;
@@ -239,12 +229,12 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
                 
                 if (plane->material.checker == 1)
                 {
-                    t_color object_color = get_checkerboard_color(hit.point, black, white, 5.0);
-                    final_color = apply_lighting(hit.point, normal, object_color, scene);
+                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
                 {
-                    final_color = apply_lighting(hit.point, normal, plane->material.color, scene);
+                    final_color = apply_lighting(hit.point, normal, plane->material.color, scene, depth + 1);
                 }
                 hit.material.reflectivity = plane->material.reflectivity;
                 hit.material.transparency = plane->material.transparency;
@@ -252,17 +242,17 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
                 break;
             }
         }
-
+        
         if (hit.material.reflectivity > 0.0)
         {
             double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
-            double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
+            // double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
             t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);
             reflection_ray.origin = add(reflection_ray.origin,
                                       multiply_scalar(reflection_ray.direction, 0.001));
             t_color reflected_color = trace_ray(reflection_ray, scene, depth + 1);
-            // final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
-            final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
+            final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
+            // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
         }
         //    if (hit.material.reflectivity > 0.0) {
         //     t_vector reflected_dir = reflect(ray.direction, hit.normal);
@@ -275,69 +265,69 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
         //     // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
         //     final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
         // }
+  if (hit.material.transparency > 0.0) {
+            // Check if the ray is entering or exiting the material
+            // printf("TRnaS\n");
+            // hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
+            // if (hit.hit_from_inside)
+            // {
+            //     hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
+            // }           
 
-// Handle refraction
-if (hit.material.transparency > 0.0) {
-
-   hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
-            if (hit.hit_from_inside)
-            {
-                hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
-            }      
-
-    float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
-    t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
-
-    // Offset the origin to prevent shadow acne (self-intersection)
-         double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
-            double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
-    
-    t_ray refracted_ray = {add(hit.point, multiply_scalar(refracted_dir, 0.01)), refracted_dir};
-   refracted_ray.origin = add(refracted_ray.origin, 
-                                      multiply_scalar(refracted_ray.direction, 0.001));
-    // Recursively trace the refracted ray with decreased depth
-    t_color refracted_color = trace_ray(refracted_ray, scene, depth - 1);
-
-    // Blend refraction with final color
-    final_color = blend_colors(final_color, refracted_color,    hit.material.transparency);
-// printf("Refracted Direction: (%f, %f, %f)\n", refracted_dir.x, refracted_dir.y, refracted_dir.z);
-// printf("Final Color: R=%f, G=%f, B=%f\n", final_color.r, final_color.g, final_color.b);
-
-}
-// }Handle refraction
-        // if (hit.material.transparency > 0.0) {
-        //     // Check if the ray is entering or exiting the material
-        //     // printf("TRnaS\n");
-        //     // hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
-        //     // if (hit.hit_from_inside)
-        //     // {
-        //     //     hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
-        //     // }           
-
-        //     // Ensure eta_ratio is valid before using it
-        //     float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
+            // Ensure eta_ratio is valid before using it
+            float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
             
-        //     // Check for total internal reflection
-        //     if (eta_ratio > 1.0) {
-        //         // Handle total internal reflection case
-        //         t_vector reflected_dir = reflect(ray.direction, hit.normal);
-        //         t_ray reflected_ray = {hit.point, reflected_dir};
-        //         reflected_ray.origin = add(reflected_ray.origin, 
-        //                                    multiply_scalar(reflected_ray.direction, 0.001));
-        //         t_color reflected_color = trace_ray(reflected_ray, scene, depth + 1);
-        //         final_color = blend_colors(final_color, reflected_color, hit.material.transparency);
-        //     } else {
-        //         // Calculate refraction direction
-        //         t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
-        //         t_ray refracted_ray = {hit.point, refracted_dir};
-        //         refracted_ray.origin = add(refracted_ray.origin, 
-        //                                    multiply_scalar(refracted_ray.direction, 0.001));
-        //         t_color refracted_color = trace_ray(refracted_ray, scene, depth + 1);
-        //         // Blend refraction with final color
-        //         final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
-        //     }
+            // Check for total internal reflection
+            if (eta_ratio > 1.0) {
+                // Handle total internal reflection case
+                t_vector reflected_dir = reflect(ray.direction, hit.normal);
+                t_ray reflected_ray = {hit.point, reflected_dir};
+                reflected_ray.origin = add(reflected_ray.origin, 
+                                           multiply_scalar(reflected_ray.direction, 0.001));
+                t_color reflected_color = trace_ray(reflected_ray, scene, depth + 1);
+                final_color = blend_colors(final_color, reflected_color, hit.material.transparency);
+            } else {
+                // Calculate refraction direction
+                t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
+                t_ray refracted_ray = {hit.point, refracted_dir};
+                refracted_ray.origin = add(refracted_ray.origin, 
+                                           multiply_scalar(refracted_ray.direction, 0.001));
+                t_color refracted_color = trace_ray(refracted_ray, scene, depth + 1);
+                // Blend refraction with final color
+                final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
+            }
         
-        // }
+        }
+// Handle refraction
+// if (hit.material.transparency > 0.0) {
+
+//    hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
+//             if (hit.hit_from_inside)
+//             {
+//                 hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
+//             }      
+
+//     float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
+//     t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
+
+//     // Offset the origin to prevent shadow acne (self-intersection)
+//          double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
+//             double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
+    
+//     t_ray refracted_ray = {add(hit.point, multiply_scalar(refracted_dir, 0.01)), refracted_dir};
+//    refracted_ray.origin = add(refracted_ray.origin, 
+//                                       multiply_scalar(refracted_ray.direction, 0.001));
+//     // Recursively trace the refracted ray with decreased depth
+//     t_color refracted_color = trace_ray(refracted_ray, scene, depth - 1);
+
+//     // Blend refraction with final color
+//     final_color = blend_colors(final_color, refracted_color,    hit.material.transparency);
+// // printf("Refracted Direction: (%f, %f, %f)\n", refracted_dir.x, refracted_dir.y, refracted_dir.z);
+// // printf("Final Color: R=%f, G=%f, B=%f\n", final_color.r, final_color.g, final_color.b);
+
+// }
+// }Handle refraction
+      
 
     }
 
@@ -358,6 +348,7 @@ void *render_thread(void *arg)
     t_color black = {0, 0, 0};
     t_color white = {255, 255, 255};
     t_vector hit_point, normal;
+	// pthread_detach(pthread_self());
 
     for (int y = thread_data->start_row; y < thread_data->end_row; y++)
     {
