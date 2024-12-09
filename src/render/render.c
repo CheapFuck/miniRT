@@ -22,6 +22,8 @@ typedef struct s_thread_data {
     t_render_data *render_data;
     int start_row;
     int end_row;
+    int thread_id;
+    int num_threads;
 } t_thread_data;
 
 
@@ -350,10 +352,15 @@ void *render_thread(void *arg)
     t_vector hit_point, normal;
 	// pthread_detach(pthread_self());
 
-    for (int y = thread_data->start_row; y < thread_data->end_row; y++)
-    {
-        for (int x = 0; x < WIDTH; x++)
-        {
+    int thread_id = thread_data->thread_id;
+    int num_threads = thread_data->num_threads;
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            int pixel_index = y * WIDTH + x;
+            if (pixel_index % num_threads == thread_id)
+            {
+                // Process this pixel
+                // render_pixel(data, x, y);
             t_ray ray = create_ray(x, y, &data->scene->camera);
             // t_vector origin = {0, 0, 0};
             // ray.origin = origin;
@@ -363,6 +370,7 @@ void *render_thread(void *arg)
             pthread_mutex_lock(&data->mutex);
             mlx_put_pixel(data->img, x, y, color);
             pthread_mutex_unlock(&data->mutex);
+            }
         }
     }
     // Update thread completion count
@@ -388,6 +396,7 @@ void *render_thread(void *arg)
     free(thread_data);
     return NULL;
 }
+
 
 int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
 {
@@ -487,14 +496,23 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     pthread_t threads[num_threads];
     int rows_per_thread = HEIGHT / num_threads;
 
-    for (int i = 0; i < num_threads; i++) {
-        t_thread_data *thread_data = malloc(sizeof(t_thread_data));
-        thread_data->render_data = data;
-        thread_data->start_row = i * rows_per_thread;
-        thread_data->end_row = (i == num_threads - 1) ? HEIGHT : (i + 1) * rows_per_thread;
+    // for (int i = 0; i < num_threads; i++) {
+    //     t_thread_data *thread_data = malloc(sizeof(t_thread_data));
+    //     thread_data->render_data = data;
+    //     thread_data->start_row = i * rows_per_thread;
+    //     thread_data->end_row = (i == num_threads - 1) ? HEIGHT : (i + 1) * rows_per_thread;
         
-        pthread_create(&threads[i], NULL, render_thread, thread_data);
-    }
+    //     pthread_create(&threads[i], NULL, render_thread, thread_data);
+    // }
+
+for (int i = 0; i < num_threads; i++) {
+    t_thread_data *thread_data = malloc(sizeof(t_thread_data));
+    thread_data->render_data = data;
+    thread_data->thread_id = i;           // Assign thread ID
+    thread_data->num_threads = num_threads; // Total number of threads
+
+    pthread_create(&threads[i], NULL, render_thread, thread_data);
+}
 
     // Start the MLX loop
     mlx_loop(mlx);

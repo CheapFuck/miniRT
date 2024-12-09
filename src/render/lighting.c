@@ -1,6 +1,7 @@
 #include "../../includes/minirt.h"
 
-t_color combine_color(t_color light_color, t_color object_color) {
+t_color combine_color(t_color light_color, t_color object_color)
+{
     t_color result;
 
     result.r = fmin(255, (light_color.r / 255.0) * object_color.r);
@@ -10,7 +11,8 @@ t_color combine_color(t_color light_color, t_color object_color) {
     return result;
 }
 
-t_vector random_point_on_light(t_light light) {
+t_vector random_point_on_light(t_light light)
+{
     double theta = ((double)rand() / RAND_MAX) * 2 * M_PI; // Random angle
     double r = light.radius * sqrt((double)rand() / RAND_MAX); // Random radius (square root for uniform distribution)
 
@@ -22,7 +24,8 @@ t_vector random_point_on_light(t_light light) {
     return random_point;
 }
 
-double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, int num_samples) {
+double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, int num_samples)
+{
     int unblocked_rays = 0;
 
     for (int i = 0; i < num_samples; i++) {
@@ -65,7 +68,7 @@ int is_checkerboard(t_vector point, double scale)
                        (int)(snapped_z / grid_size)) % 2;
 }
 
-t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale) {
+t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale){
     if (is_checkerboard(point, scale))
     {
         return color1;
@@ -107,9 +110,6 @@ int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
             return 1; // In shadow
         }
     }
-
-    // TODO: Add checks for planes or other objects
-
     return 0; // Not in shadow
 }
 
