@@ -113,54 +113,56 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     t_vector hit_point, normal;
     t_color black = {255, 0, 0};
     t_color white = {0, 255, 0};
+    int i;
     // t_object_type hit_type;
     hit.index = -1;
 
     // Check sphere intersections
-    for (int i = 0; i < scene->num_spheres; i++)
+   i = 0;
+while (i < scene->num_spheres)
+{
+    double t_sphere;
+    ray.direction = normalize(ray.direction);
+    if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
     {
-        double t_sphere;
-        ray.direction = normalize(ray.direction);
-        if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_sphere;
-            hit.type = SPHERE;
-            hit.index = i;
-        }
-
-
-
-        
+        hit.hit = 1;
+        hit.t = t_sphere;
+        hit.type = SPHERE;
+        hit.index = i;
     }
+    i++;
+}
 
     // Check cylinder intersections
-    for (int i = 0; i < scene->num_cylinders; i++)
+i = 0;
+while (i < scene->num_cylinders)
+{
+    double t_cy;
+    if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
     {
-        double t_cy;
-        if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_cy;
-            hit.type = CYLINDER;
-            hit.index = i;
-        }
+        hit.hit = 1;
+        hit.t = t_cy;
+        hit.type = CYLINDER;
+        hit.index = i;
     }
+    i++;
+}
+
 
     // Check plane intersections
-    for (int i = 0; i < scene->num_planes; i++)
+i = 0;
+while (i < scene->num_planes)
+{
+    double t_plane;
+    if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
     {
-        // printf("PLEEN\n");
-        double t_plane;
-        if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
-        {
-            // printf("PLEEN HIT\n");
-            hit.hit = 1;
-            hit.t = t_plane;
-            hit.type = PLANE;
-            hit.index = i;
-        }
+        hit.hit = 1;
+        hit.t = t_plane;
+        hit.type = PLANE;
+        hit.index = i;
     }
+    i++;
+}
 
     // Calculate color based on closest intersection
     if (hit.hit)
@@ -256,29 +258,9 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
             final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
             // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
         }
-        //    if (hit.material.reflectivity > 0.0) {
-        //     t_vector reflected_dir = reflect(ray.direction, hit.normal);
-        //     double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
-        //     double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
-        //     t_ray reflected_ray = {hit.point, reflected_dir};
-        //     reflected_ray.origin = add(reflected_ray.origin, 
-        //                               multiply_scalar(reflected_ray.direction, 0.001));
-        //     t_color reflected_color = trace_ray(reflected_ray, scene, depth + 1);
-        //     // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
-        //     final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
-        // }
   if (hit.material.transparency > 0.0) {
-            // Check if the ray is entering or exiting the material
-            // printf("TRnaS\n");
-            // hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
-            // if (hit.hit_from_inside)
-            // {
-            //     hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
-            // }           
-
             // Ensure eta_ratio is valid before using it
             float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
-            
             // Check for total internal reflection
             if (eta_ratio > 1.0) {
                 // Handle total internal reflection case
@@ -300,36 +282,6 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
             }
         
         }
-// Handle refraction
-// if (hit.material.transparency > 0.0) {
-
-//    hit.hit_from_inside = dot(ray.direction, hit.normal) > 0;
-//             if (hit.hit_from_inside)
-//             {
-//                 hit.normal = multiply_scalar(hit.normal, -1.0); // Flip normal if inside
-//             }      
-
-//     float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
-//     t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
-
-//     // Offset the origin to prevent shadow acne (self-intersection)
-//          double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
-//             double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
-    
-//     t_ray refracted_ray = {add(hit.point, multiply_scalar(refracted_dir, 0.01)), refracted_dir};
-//    refracted_ray.origin = add(refracted_ray.origin, 
-//                                       multiply_scalar(refracted_ray.direction, 0.001));
-//     // Recursively trace the refracted ray with decreased depth
-//     t_color refracted_color = trace_ray(refracted_ray, scene, depth - 1);
-
-//     // Blend refraction with final color
-//     final_color = blend_colors(final_color, refracted_color,    hit.material.transparency);
-// // printf("Refracted Direction: (%f, %f, %f)\n", refracted_dir.x, refracted_dir.y, refracted_dir.z);
-// // printf("Final Color: R=%f, G=%f, B=%f\n", final_color.r, final_color.g, final_color.b);
-
-// }
-// }Handle refraction
-      
 
     }
 
@@ -351,32 +303,33 @@ void *render_thread(void *arg)
     t_color white = {255, 255, 255};
     t_vector hit_point, normal;
 	// pthread_detach(pthread_self());
-
+    int x;
+    int y;
     int thread_id = thread_data->thread_id;
     int num_threads = thread_data->num_threads;
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            int pixel_index = y * WIDTH + x;
-            if (pixel_index % num_threads == thread_id)
-            {
-                // Process this pixel
-                // render_pixel(data, x, y);
+y = 0;
+while (y < HEIGHT) {
+    x = 0;
+    while (x < WIDTH) {
+        int pixel_index = y * WIDTH + x;
+        if (pixel_index % num_threads == thread_id)
+        {
             t_ray ray = create_ray(x, y, &data->scene->camera);
-            // t_vector origin = {0, 0, 0};
-            // ray.origin = origin;
             t_color final_color = trace_ray(ray, data->scene, 5);
             double t;
             uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
             pthread_mutex_lock(&data->mutex);
             mlx_put_pixel(data->img, x, y, color);
             pthread_mutex_unlock(&data->mutex);
-            }
         }
+        x++;
     }
+    y++;
+}
+
     // Update thread completion count
     pthread_mutex_lock(&data->mutex);
     data->threads_completed++;
-    
     // If this is the last thread to complete
     if (data->threads_completed == NUM_THREADS)
     {
@@ -470,6 +423,8 @@ void update_display(void *param)
 
 void render_scene(mlx_t *mlx, t_scene *scene)
 {
+    int i;
+
     mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
     if (!img)
         exit_with_error("Error creating image");
@@ -495,24 +450,17 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     const int num_threads = NUM_THREADS;  // Consider making this a #define NUM_THREADS
     pthread_t threads[num_threads];
     int rows_per_thread = HEIGHT / num_threads;
-
-    // for (int i = 0; i < num_threads; i++) {
-    //     t_thread_data *thread_data = malloc(sizeof(t_thread_data));
-    //     thread_data->render_data = data;
-    //     thread_data->start_row = i * rows_per_thread;
-    //     thread_data->end_row = (i == num_threads - 1) ? HEIGHT : (i + 1) * rows_per_thread;
-        
-    //     pthread_create(&threads[i], NULL, render_thread, thread_data);
-    // }
-
-for (int i = 0; i < num_threads; i++) {
+    i = 0;
+    while (i < num_threads)
+{
     t_thread_data *thread_data = malloc(sizeof(t_thread_data));
     thread_data->render_data = data;
     thread_data->thread_id = i;           // Assign thread ID
     thread_data->num_threads = num_threads; // Total number of threads
-
     pthread_create(&threads[i], NULL, render_thread, thread_data);
+    i++;
 }
+
 
     // Start the MLX loop
     mlx_loop(mlx);
