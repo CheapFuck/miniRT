@@ -37,7 +37,8 @@ typedef struct s_material
 typedef enum e_object_type {
     SPHERE,
     CYLINDER,
-    PLANE
+    PLANE,
+    DISC
 } t_object_type;
 
 typedef struct s_hit_record {

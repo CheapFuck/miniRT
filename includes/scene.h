@@ -35,6 +35,19 @@ typedef struct s_cylinder {
     t_material  material;
 } t_cylinder;
 
+typedef struct s_disc
+{
+	double		diameter;
+	double		height;
+    t_material  material;
+	t_vector	orientation;
+    t_vector center;    // Center of the disc
+    t_vector normal;    // Normalized normal vector of the disc
+    double radius;      // Radius of the disc
+    t_color color;      // Color of the disc
+}	t_disc;
+
+
 
 typedef struct s_sphere {
     t_vector center;
@@ -53,9 +66,11 @@ typedef struct s_scene {
     t_plane planes[10]; // Add planes here
     t_sphere spheres[10]; // Adjust size as needed
     t_cylinder cylinders[10];
+   	t_disc	    discs[10];
     int num_spheres;
     int num_planes;
-    int num_cylinders;
+   	int			num_cylinders;
+   	int			num_discs;
     int num_lights;
 } t_scene;
 

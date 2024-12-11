@@ -1,15 +1,5 @@
 #include "../../includes/minirt.h"
 
-t_color combine_color(t_color light_color, t_color object_color)
-{
-    t_color result;
-
-    result.r = fmin(255, (light_color.r / 255.0) * object_color.r);
-    result.g = fmin(255, (light_color.g / 255.0) * object_color.g);
-    result.b = fmin(255, (light_color.b / 255.0) * object_color.b);
-
-    return result;
-}
 
 t_vector random_point_on_light(t_light light)
 {

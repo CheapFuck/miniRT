@@ -37,5 +37,10 @@ double calculate_fresnel(t_vector incident, t_vector normal);
 t_color uint32_to_t_color(uint32_t color);
 t_color blend_colors(t_color original_color, t_color reflected_color, float reflectivity);
 double schlick_reflection_coefficient(double cos_theta, double refractive_index);
+int intersect_disc(t_ray *ray, t_disc *disc, double *t);
+t_vector	scale(t_vector v, double s);
+double length_squared(t_vector v);
+void parse_discs(char *line, t_scene *scene);
+t_color	combine_color(t_color light_color, t_color object_color);
 
 #endif // RENDER_H

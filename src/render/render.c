@@ -92,6 +92,17 @@ t_vector reflect(t_vector direction, t_vector normal) {
 }
 
 
+t_color	combine_color(t_color light_color, t_color object_color)
+{
+	t_color	result;
+
+	result.r = fmin(255, (light_color.r / 255.0) * object_color.r);
+	result.g = fmin(255, (light_color.g / 255.0) * object_color.g);
+	result.b = fmin(255, (light_color.b / 255.0) * object_color.b);
+	return (result);
+}
+
+
 // Modified color calculation function with reflection support
 t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 {
@@ -148,6 +159,19 @@ while (i < scene->num_cylinders)
     i++;
 }
 
+// while (i < scene->num_discs)
+// {
+//     double t_di;
+//     if (intersect_disc(&ray, &scene->discs[i], &t_di) && t_di < hit.t)
+//     {
+//         hit.hit = 1;
+//         hit.t = t_di;
+//         hit.type = DISC;
+//         hit.index = i;
+//     }
+//     i++;
+// }
+
 
     // Check plane intersections
 i = 0;
@@ -163,6 +187,9 @@ while (i < scene->num_planes)
     }
     i++;
 }
+
+
+
 
     // Calculate color based on closest intersection
     if (hit.hit)
@@ -245,7 +272,39 @@ while (i < scene->num_planes)
                 hit.material.refractive_index = plane->material.refractive_index;
                 break;
             }
+                        case DISC:
+            {
+                double t;
+               	t = INFINITY;
+                t_disc *disc = &scene->discs[hit.index];
+                normal = disc->normal;
+                	t_color single;
+	t_color gradient;
+                 hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
+			normal = normalize(subtract(hit_point, scene->discs[i].center));
+            gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+			single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+			final_color = combine_color(single, gradient);
+
+
+                if (disc->material.checker == 1)
+                {
+                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+                }
+                else
+                {
+                   gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+			single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+			final_color = combine_color(single, gradient);
+                }
+                hit.material.reflectivity = disc->material.reflectivity;
+                hit.material.transparency = disc->material.transparency;
+                hit.material.refractive_index = disc->material.refractive_index;
+                break;
+            }
         }
+        
         
         if (hit.material.reflectivity > 0.0)
         {

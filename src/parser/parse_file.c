@@ -45,6 +45,7 @@ void parse_file(const char *filename, t_scene *scene)
         {
             // printf("Detected cylinder: %s\n", line);
             parse_cylinder(line, scene);
+            parse_discs(line, scene);
         }
         else if (ft_strncmp(line, "#", 1) == 0)
             continue ;

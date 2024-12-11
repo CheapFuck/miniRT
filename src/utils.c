@@ -48,3 +48,8 @@ t_vector normalize(t_vector v)
     result.z = v.z / length;
     return result;
 }
+
+double length_squared(t_vector v)
+{
+    return (v.x * v.x + v.y * v.y + v.z * v.z);
+}
