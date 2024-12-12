@@ -199,6 +199,12 @@ void parse_discs(char *line, t_scene *scene)
         ft_free_split(tokens);
         return;
     }
+    disc.material.checker = ft_atoi(tokens[6]);
+    disc.material.reflectivity = ft_atof(tokens[7]);
+
+    disc.material.transparency = ft_atof(tokens[8]);
+    disc.material.refractive_index = ft_atof(tokens[9]);
+
     disc.diameter = ft_atof(tokens[3]);
     disc.radius = disc.diameter / 2.0;
     disc.height = ft_atof(tokens[4]);

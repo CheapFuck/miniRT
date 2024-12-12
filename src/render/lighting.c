@@ -152,9 +152,9 @@ while (i < scene->num_lights) {
         double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 50) * light.brightness * shadow_factor * 1; // 50 is the shininess factor
 
         // Add contributions to light
-        light_contribution.r += 255 * (diffuse_intensity + specular_intensity);
-        light_contribution.g += 255 * (diffuse_intensity + specular_intensity);
-        light_contribution.b += 255 * (diffuse_intensity + specular_intensity);
+        light_contribution.r += light.color.r * (diffuse_intensity + specular_intensity);
+        light_contribution.g += light.color.g * (diffuse_intensity + specular_intensity);
+        light_contribution.b += light.color.b * (diffuse_intensity + specular_intensity);
     }
 
     i++;

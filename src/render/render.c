@@ -123,7 +123,7 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     double refractive_index = 0.0;
     t_vector hit_point, normal;
     t_color black = {255, 0, 0};
-    t_color white = {0, 255, 0};
+    t_color white = {0, 0, 255};
     int i;
     // t_object_type hit_type;
     hit.index = -1;
@@ -158,19 +158,19 @@ while (i < scene->num_cylinders)
     }
     i++;
 }
-
-// while (i < scene->num_discs)
-// {
-//     double t_di;
-//     if (intersect_disc(&ray, &scene->discs[i], &t_di) && t_di < hit.t)
-//     {
-//         hit.hit = 1;
-//         hit.t = t_di;
-//         hit.type = DISC;
-//         hit.index = i;
-//     }
-//     i++;
-// }
+i = 0;
+while (i < scene->num_discs)
+{
+    double t_disc;
+    if (intersect_disc(&ray, &scene->discs[i], &t_disc) && t_disc < hit.t)
+    {
+        hit.hit = 1;
+        hit.t = t_disc;
+        hit.type = DISC;
+        hit.index = i;
+    }
+    i++;
+}
 
 
     // Check plane intersections
@@ -272,31 +272,48 @@ while (i < scene->num_planes)
                 hit.material.refractive_index = plane->material.refractive_index;
                 break;
             }
-                        case DISC:
+            case DISC:
             {
+                // printf("doe ik dit?\n");
                 double t;
                	t = INFINITY;
                 t_disc *disc = &scene->discs[hit.index];
                 normal = disc->normal;
+        			// normal = normalize(subtract(hit_point, scene->discs[i].center));
+
                 	t_color single;
-	t_color gradient;
-                 hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
-			normal = normalize(subtract(hit_point, scene->discs[i].center));
-            gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
-			single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
-			final_color = combine_color(single, gradient);
+	        t_color gradient;
+            hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
+            // normal = disc->normal;
+			// normal = normalize(subtract(hit.point, disc->center));
+            // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+            
+			// single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+			// final_color = combine_color(single, gradient);
 
 
                 if (disc->material.checker == 1)
                 {
+                    // printf("waaaat!?\n");
                     t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
                 {
-                   gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
-			single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
-			final_color = combine_color(single, gradient);
+                    // printf("jatoc!?\n");
+                    // hit_point = add(ray.origin, ray.direction);
+                    // gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
+                    // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+			        
+                    gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
+            
+            // single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+    			    // single = apply_lighting(hit_point, disc->normal, disc->color, scene, depth + 1);
+	    		    // final_color = combine_color(single, gradient);
+            		// final_color = single;
+              		final_color = gradient;
+                    // final_color = apply_lighting(hit.point, normal, disc->material.color, scene, depth + 1);
+
                 }
                 hit.material.reflectivity = disc->material.reflectivity;
                 hit.material.transparency = disc->material.transparency;
