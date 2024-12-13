@@ -217,12 +217,21 @@ void parse_discs(char *line, t_scene *scene)
     bottom_disc.normal = disc.orientation;
     bottom_disc.radius = disc.radius;
     bottom_disc.color = disc.color;
+    
+    bottom_disc.material.checker = disc.material.checker;
+    bottom_disc.material.reflectivity = disc.material.reflectivity;
+    bottom_disc.material.transparency = disc.material.transparency;
+    bottom_disc.material.refractive_index = disc.material.refractive_index;
     t_disc top_disc;
     t_vector top_offset = multiply_scalar(disc.orientation, 0.5 * disc.height);
     top_disc.center = add(disc.center, top_offset);
     top_disc.normal = disc.orientation;
     top_disc.radius = disc.radius;
     top_disc.color = disc.color;
+    top_disc.material.checker = disc.material.checker;
+    top_disc.material.reflectivity = disc.material.reflectivity;
+    top_disc.material.transparency = disc.material.transparency;
+    top_disc.material.refractive_index = disc.material.refractive_index;
     if (scene->num_discs + 2 >= 65535) {
         fprintf(stderr, "Error: Maximum number of discs exceeded\n");
         ft_free_split(tokens);
