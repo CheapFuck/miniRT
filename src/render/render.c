@@ -1,4 +1,4 @@
-#include "../../includes/minirt.h"
+#include "../includes/minirt.h"
 #include <sys/time.h>
 #include <pthread.h>
 
@@ -102,6 +102,43 @@ t_color	combine_color(t_color light_color, t_color object_color)
 	return (result);
 }
 
+t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale)
+{
+    if (is_cylinder_checkerboard(point, cylinder, scale))
+        return color1;
+    return color2;
+}
+
+int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
+{
+    // Step 1: Move the point to the cylinder's local space
+    t_vector local_point = subtract(point, cylinder->center);
+
+    // Step 2: Project the point onto the cylinder's axis (orientation)
+    double height = dot(local_point, cylinder->orientation); // Projection length
+    t_vector projection = multiply_scalar(cylinder->orientation, height);
+
+    // Step 3: Find the radial position (2D point around the cylinder)
+    t_vector radial_vector = subtract(local_point, projection);
+
+    // Step 4: Calculate the angle around the cylinder (normalized to [0, 1])
+    double angle = atan2(radial_vector.z, radial_vector.x); // Angle in [-π, π]
+    double u = (angle / (2.0 * M_PI)) + 0.5;               // Normalize to [0, 1]
+
+    // Step 5: Calculate the height ratio (v-coordinate)
+    double v = (height + (cylinder->height / 2.0)) / cylinder->height; // Normalize to [0, 1]
+
+    // Step 6: Apply scaling for the checkerboard pattern
+    double scaled_u = u * scale;
+    double scaled_v = v * scale;
+
+    // Step 7: Create checkerboard pattern
+    int u_check = (int)floor(scaled_u) % 2;
+    int v_check = (int)floor(scaled_v) % 2;
+
+    // Step 8: Return the pattern value (1 for black, 0 for white)
+    return (u_check + v_check) % 2;
+}
 
 // Modified color calculation function with reflection support
 t_color trace_ray(t_ray ray, t_scene *scene, int depth)
@@ -209,11 +246,11 @@ while (i < scene->num_planes)
                         // printf("LBLBLB\n");
 
                     t_vector local_point = subtract(hit.point, sphere->center);
-                    double u = 0.5 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-                    double v = 0.5 - asin(local_point.y / sphere->radius) / M_PI;
+                    double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+                    double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
                     
-                    int check_u = (int)(u * 10.0) % 2;
-                    int check_v = (int)(v * 10.0) % 2;
+                    int check_u = (int)(u * 20.0) % 2;
+                    int check_v = (int)(v * 20.0) % 2;
                     
                     t_color object_color = (check_u == check_v) ? white : black;
                     
@@ -241,8 +278,14 @@ while (i < scene->num_planes)
                 
                if (cylinder->material.checker == 1)
                 {
-                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    
+                    // t_color object_color = get_checkerboard_color(hit.point, cylinder, black, white, 1.0);
+                    // t_color object_color = get_checkerboard_color(hit.point, &scene->cylinders[i], black, white, .5);
+                    // t_color     object_color = get_cylinder_checkerboard_color(hit.point, &scene->cylinders[i], black, white, 10);
+                    int is_black = is_checkerboard(hit.point, cylinder, 0.5); // Scale = 1.0 for fine squares
+                    t_color object_color = is_black ? black : white;
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+                    // final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
                 {
@@ -260,7 +303,8 @@ while (i < scene->num_planes)
                 
                 if (plane->material.checker == 1)
                 {
-                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    // t_color object_color = get_checkerboard_color(hit.point, plane, black, white, 1.0);
+                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
@@ -295,14 +339,15 @@ while (i < scene->num_planes)
                 if (disc->material.checker == 1)
                 {
                     // printf("waaaat!?\n");
-                    t_color object_color = get_checkerboard_color(hit.point, black, white, 1.0);
+                    // t_color object_color = get_checkerboard_color(hit.point, disc, black, white, 1.0);
+                    t_color object_color = get_disc_checkerboard_color(hit.point, disc, black, white, 0.5);
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
                 {
                     // printf("jatoc!?\n");
                     // hit_point = add(ray.origin, ray.direction);
-                    // gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
+                    gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
                     // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
 			        
                     gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);

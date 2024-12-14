@@ -53,26 +53,121 @@ while (i < num_samples) {
     return (double)unblocked_rays / num_samples; // Fraction of rays that reach the light
 }
 
-int is_checkerboard(t_vector point, double scale)
+#include <math.h>
+
+int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 {
-    float epsilon = 1e-4;
-    float grid_size = scale; // Adjust to your checkerboard square size
-    float snapped_x = floor((point.x + epsilon)/ grid_size) * grid_size;
-    float snapped_y = floor((point.y + epsilon)/ grid_size) * grid_size;
-    float snapped_z = floor((point.z + epsilon)/ grid_size) * grid_size;
-    return ((int)(snapped_x / grid_size) + 
-                       (int)(snapped_y / grid_size) + 
-                       (int)(snapped_z / grid_size)) % 2;
+    t_vector local_point;
+    double height;
+    double angle;
+    double grid_size = scale;
+
+    // Translate point to local space (relative to cylinder center)
+    local_point = subtract(point, cylinder->center);
+
+    // Project the point onto the cylinder's orientation axis to get height
+    height = dot(local_point, cylinder->orientation);
+
+    // Remove the height component to get the point on the cylinder's "circle"
+    t_vector radial = subtract(local_point,
+                        multiply_scalar(cylinder->orientation, height));
+
+    // Create an orthonormal basis perpendicular to the cylinder's orientation
+    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    if (fabs(dot(up, cylinder->orientation)) > 0.99) // Avoid parallel vectors
+        up = (t_vector){1, 0, 0}; 
+
+    t_vector x_axis = normalize(cross(up, cylinder->orientation));
+    t_vector y_axis = normalize(cross(cylinder->orientation, x_axis));
+
+    // Project radial vector onto the local X-Y plane
+    double proj_x = dot(radial, x_axis);
+    double proj_y = dot(radial, y_axis);
+
+    // Calculate the angle around the cylinder using atan2
+    angle = atan2(proj_y, proj_x);
+
+    // Map angle to a range [0, 2*pi]
+    if (angle < 0)
+        angle += 2 * M_PI;
+
+    // Scale height and angle to grid size
+    int u = (int)floor(height / grid_size);
+    int v = (int)floor((angle * cylinder->radius) / grid_size);
+
+    return (u + v) % 2;
 }
 
-t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale){
-    if (is_checkerboard(point, scale))
-    {
+int is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
+{
+    double grid_size = scale;
+
+    // Create an orthonormal basis for the plane
+    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    if (fabs(dot(up, plane_normal)) > 0.99) // Avoid parallel vectors
+        up = (t_vector){1, 0, 0};
+
+    t_vector x_axis = normalize(cross(up, plane_normal));
+    t_vector y_axis = normalize(cross(plane_normal, x_axis));
+
+    // Project the point onto the plane's local X-Y axes
+    double proj_x = dot(point, x_axis);
+    double proj_y = dot(point, y_axis);
+
+    // Calculate grid coordinates
+    int u = (int)floor(proj_x / grid_size);
+    int v = (int)floor(proj_y / grid_size);
+
+    // Return the checkerboard color
+    return (u + v) % 2;
+}
+
+t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, t_vector normal,  double scale)
+{
+    if (is_plane_checkerboard(point, normal, scale))
         return color1;
-    } else
-    {
-        return color2;
-    }
+    return color2;
+}
+
+int is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
+{
+   double grid_size = scale;
+
+    // Create an orthonormal basis for the plane
+    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    if (fabs(dot(up, disc->normal)) > 0.99) // Avoid parallel vectors
+        up = (t_vector){1, 0, 0};
+
+    t_vector x_axis = normalize(cross(up, disc->normal));
+    t_vector y_axis = normalize(cross(disc->normal, x_axis));
+
+    // Project the point onto the plane's local X-Y axes
+    double proj_x = dot(point, x_axis);
+    double proj_y = dot(point, y_axis);
+
+    // Calculate grid coordinates
+    int u = (int)floor(proj_x / grid_size);
+    int v = (int)floor(proj_y / grid_size);
+
+    // Return the checkerboard color
+    return (u + v) % 2;
+}
+
+t_color get_disc_checkerboard_color(t_vector point, t_disc *disc, t_color color1, t_color color2, double scale)
+{
+    if (is_disc_checkerboard(point, disc, scale))
+        return color1;
+    return color2;
+}
+
+
+
+t_color get_checkerboard_color(t_vector point, t_cylinder *cylinder,
+                               t_color color1, t_color color2, double scale)
+{
+    if (is_checkerboard(point, cylinder, scale))
+        return color1;
+    return color2;
 }
 
 
@@ -138,7 +233,7 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
    i = 0;
 while (i < scene->num_lights) {
     t_light light = scene->lights[i];
-    double shadow_factor = compute_shadow_factor(hit_point, light, scene, 32); // 32 samples for soft shadows
+    double shadow_factor = compute_shadow_factor(hit_point, light, scene, 8); // 32 samples for soft shadows
 
     if (shadow_factor > 0) { // Only compute lighting if not fully in shadow
         // Light direction

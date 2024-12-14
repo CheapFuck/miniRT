@@ -52,7 +52,7 @@ int intersect_plane(t_ray *ray, t_plane *plane, double *t)
 }
 
 
-t_vector	scale(t_vector v, double s)
+t_vector	scale_vector(t_vector v, double s)
 {
 	t_vector result;
 
@@ -82,7 +82,7 @@ int intersect_disc(t_ray *ray, t_disc *disc, double *t)
         return (0);
 
     // Step 3: Check if the intersection point is within the disc's radius
-    p = add(ray->origin, scale(ray->direction, t_plane)); // Intersection point
+    p = add(ray->origin, scale_vector(ray->direction, t_plane)); // Intersection point
     distance_squared = length_squared(subtract(p, disc->center));
     if (distance_squared > disc->radius * disc->radius)
         return (0); // Intersection is outside the disc

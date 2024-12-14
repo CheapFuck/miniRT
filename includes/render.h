@@ -17,8 +17,13 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
 int is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
 t_vector random_point_on_light(t_light light);
 double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, int num_samples);
-int is_checkerboard(t_vector point, double scale);
-t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
+// int is_checkerboard(t_vector point, double scale);
+int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
+t_color get_checkerboard_color(t_vector point, t_cylinder *cylinder,
+                               t_color color1, t_color color2, double scale);
+t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale);
+int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
+// t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
 void render_next_row(void *param);
 t_vector cross(t_vector a, t_vector b);
 t_vector world_to_local(t_vector point, t_vector orientation, t_vector center);
@@ -38,9 +43,12 @@ t_color uint32_to_t_color(uint32_t color);
 t_color blend_colors(t_color original_color, t_color reflected_color, float reflectivity);
 double schlick_reflection_coefficient(double cos_theta, double refractive_index);
 int intersect_disc(t_ray *ray, t_disc *disc, double *t);
-t_vector	scale(t_vector v, double s);
+t_vector	scale_vector(t_vector v, double s);
 double length_squared(t_vector v);
 void parse_discs(char *line, t_scene *scene);
 t_color	combine_color(t_color light_color, t_color object_color);
+// t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
+t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, t_vector normal,  double scale);
+t_color get_disc_checkerboard_color(t_vector point, t_disc *disc, t_color color1, t_color color2, double scale);
 
 #endif // RENDER_H
