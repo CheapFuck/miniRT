@@ -55,6 +55,97 @@ while (i < num_samples) {
 
 #include <math.h>
 
+    // int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
+    // {
+    //     t_vector local_point;
+    //     double height;
+    //     double angle;
+    //     double grid_size = scale;
+
+    //     // Translate point to local space (relative to cylinder center)
+    //     local_point = subtract(point, cylinder->center);
+
+    //     // Project the point onto the cylinder's orientation axis to get height
+    //     height = dot(local_point, cylinder->orientation);
+
+    //     // Remove the height component to get the point on the cylinder's "circle"
+    //     t_vector radial = subtract(local_point,
+    //                         multiply_scalar(cylinder->orientation, height));
+
+    //     // Create an orthonormal basis perpendicular to the cylinder's orientation
+    //     t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    //     if (fabs(dot(up, cylinder->orientation)) > 0.99) // Avoid parallel vectors
+    //         up = (t_vector){1, 0, 0}; 
+
+    //     t_vector x_axis = normalize(cross(up, cylinder->orientation));
+    //     t_vector y_axis = normalize(cross(cylinder->orientation, x_axis));
+
+    //     // Project radial vector onto the local X-Y plane
+    //     double proj_x = dot(radial, x_axis);
+    //     double proj_y = dot(radial, y_axis);
+
+    //     // Calculate the angle around the cylinder using atan2
+    //     angle = atan2(proj_y, proj_x);
+
+    //     // Map angle to a range [0, 2*pi]
+    //     if (angle < 0)
+    //         angle += 2 * M_PI;
+
+    //     // Scale height and angle to grid size
+    //     int u = (int)floor(height / grid_size);
+    //     int v = (int)floor((angle * cylinder->radius) / grid_size);
+
+    //     return (u + v) % 2;
+    // }
+
+// int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
+// {
+//     t_vector local_point;
+//     double height;
+//     double angle;
+//     double grid_size = scale;
+
+//     // Translate point to local space (relative to cylinder center)
+//     local_point = subtract(point, cylinder->center);
+
+//     // Project the point onto the cylinder's orientation axis to get height
+//     height = dot(local_point, cylinder->orientation);
+
+//     // Remove the height component to get the point on the cylinder's "circle"
+//     t_vector radial = subtract(local_point,
+//                         multiply_scalar(cylinder->orientation, height));
+
+//     // Create an orthonormal basis perpendicular to the cylinder's orientation
+//     t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+//     if (fabs(dot(up, cylinder->orientation)) > 0.99) // Avoid parallel vectors
+//         up = (t_vector){1, 0, 0};
+
+//     t_vector x_axis = normalize(cross(up, cylinder->orientation));
+//     t_vector y_axis = normalize(cross(cylinder->orientation, x_axis));
+
+//     // Project radial vector onto the local X-Y plane
+//     double proj_x = dot(radial, x_axis);
+//     double proj_y = dot(radial, y_axis);
+
+//     // Calculate the angle around the cylinder using atan2
+//     angle = atan2(proj_y, proj_x);
+
+//     // Normalize angle to [0, 2*pi]
+//     if (angle < 0)
+//         angle += 2 * M_PI;
+
+//     // Map angle to a range scaled to grid size relative to circumference
+//     double circumference = 2 * M_PI * cylinder->radius;
+//     double scaled_angle = angle / (2 * M_PI) * circumference;
+
+//     // Scale height and angle to grid size
+//     int u = (int)floor(height / grid_size);       // Vertical coordinate
+//     int v = (int)floor(scaled_angle / grid_size); // Horizontal (angular) coordinate
+
+//     // Return the alternating checkerboard pattern
+//     return (u + v) % 2;
+// }
+
 int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 {
     t_vector local_point;
@@ -73,9 +164,9 @@ int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
                         multiply_scalar(cylinder->orientation, height));
 
     // Create an orthonormal basis perpendicular to the cylinder's orientation
-    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
-    if (fabs(dot(up, cylinder->orientation)) > 0.99) // Avoid parallel vectors
-        up = (t_vector){1, 0, 0}; 
+    t_vector up = {0, 1, 0};
+    if (fabs(dot(up, cylinder->orientation)) > 0.99)
+        up = (t_vector){1, 0, 0};
 
     t_vector x_axis = normalize(cross(up, cylinder->orientation));
     t_vector y_axis = normalize(cross(cylinder->orientation, x_axis));
@@ -87,16 +178,19 @@ int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
     // Calculate the angle around the cylinder using atan2
     angle = atan2(proj_y, proj_x);
 
-    // Map angle to a range [0, 2*pi]
-    if (angle < 0)
-        angle += 2 * M_PI;
+    // Normalize angle to [0, 1) range
+    double normalized_angle = (angle + M_PI) / (2 * M_PI);
 
-    // Scale height and angle to grid size
+    // Scale height and angle into grid coordinates
     int u = (int)floor(height / grid_size);
-    int v = (int)floor((angle * cylinder->radius) / grid_size);
+    int v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius) / grid_size);
 
+    // Return alternating checkerboard pattern
     return (u + v) % 2;
 }
+
+
+
 
 int is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
 {

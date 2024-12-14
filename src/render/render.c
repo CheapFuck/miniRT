@@ -158,7 +158,7 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     double reflectivity = 0.0;
     double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
     double refractive_index = 0.0;
-    t_vector hit_point, normal;
+    t_vector normal;
     t_color black = {255, 0, 0};
     t_color white = {0, 0, 255};
     int i;
@@ -253,13 +253,12 @@ while (i < scene->num_planes)
                     int check_v = (int)(v * 20.0) % 2;
                     
                     t_color object_color = (check_u == check_v) ? white : black;
-                    
-                    final_color = apply_lighting(hit_point, normal, object_color, scene, depth + 1);
+                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                     // final_color = apply_lighting(hit.point, normal, object_color, scene);
                 }
                 else
                 {
-                    final_color = apply_lighting(hit_point, normal, sphere->material.color, scene, depth + 1);
+                    final_color = apply_lighting(hit.point, normal, sphere->material.color, scene, depth + 1);
                 }
                 // reflectivity = sphere->material.reflectivity;
                 // transparency = sphere->material.transparency;
@@ -327,7 +326,7 @@ while (i < scene->num_planes)
 
                 	t_color single;
 	        t_color gradient;
-            hit_point = add(ray.origin, multiply_scalar(ray.direction, t));
+            // hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
             // normal = disc->normal;
 			// normal = normalize(subtract(hit.point, disc->center));
             // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);

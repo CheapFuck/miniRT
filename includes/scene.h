@@ -66,7 +66,7 @@ typedef struct s_scene {
     t_plane planes[10]; // Add planes here
     t_sphere spheres[10]; // Adjust size as needed
     t_cylinder cylinders[10];
-   	t_disc	    discs[10];
+   	t_disc	    discs[20];
     int num_spheres;
     int num_planes;
    	int			num_cylinders;
