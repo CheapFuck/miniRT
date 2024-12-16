@@ -26,6 +26,9 @@ int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 // t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
 void render_next_row(void *param);
 t_vector cross(t_vector a, t_vector b);
+int is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale);
+int is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder, double scale);
+
 t_vector world_to_local(t_vector point, t_vector orientation, t_vector center);
 t_ray create_ray(int x, int y, t_camera *camera);
 // uint32_t trace_ray(t_ray ray, t_scene *scene, int depth);
