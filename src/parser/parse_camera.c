@@ -17,7 +17,7 @@ void parse_camera(char *line, t_scene *scene)
     scene->camera.orientation.z = ft_atof(orient[2]);
 
     scene->camera.fov = ft_atoi(tokens[3]);
-
+setup_camera(&scene->camera);
     ft_free_split(tokens);
     ft_free_split(pos);
     ft_free_split(orient);

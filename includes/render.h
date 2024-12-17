@@ -3,7 +3,7 @@
 
 #include "minirt.h"
 
-#define MAX_REFLECTION_DEPTH 16
+#define MAX_REFLECTION_DEPTH 7
 
 // Function to render the scene
 void render_scene(mlx_t *mlx, t_scene *scene);
@@ -27,16 +27,19 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
 int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
 t_color get_checkerboard_color(t_vector point, t_cylinder *cylinder,
                                t_color color1, t_color color2, double scale);
-t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale);
+// t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale);
 int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
 // t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
 void render_next_row(void *param);
+void update_display(void *param);
 t_vector cross(t_vector a, t_vector b);
 int is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale);
 int is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder, double scale);
-
+void setup_camera(t_camera *camera);
+void cleanup_and_exit(t_render_data *data);
 t_vector world_to_local(t_vector point, t_vector orientation, t_vector center);
-t_ray create_ray(int x, int y, t_camera *camera);
+// t_ray create_ray(int x, int y, t_camera *camera);
+t_ray create_ray(int x, int y, t_camera *camera, double fov_scale_x, double fov_scale_y);
 // uint32_t trace_ray(t_ray ray, t_scene *scene, int depth);
 t_color trace_ray(t_ray ray, t_scene *scene, int depth);
 t_color blend_colors(t_color color1, t_color color2, float ratio);

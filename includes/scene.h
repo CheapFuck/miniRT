@@ -3,10 +3,14 @@
 
 #include "objects.h" // Include this to access t_sphere and other types
 
+
+
 typedef struct s_camera {
     t_vector pos;
     t_vector orientation;
     double fov;
+    double fov_scale_x; // Precomputed scale for X
+    double fov_scale_y; // Precomputed scale for Y
 } t_camera;
 
 typedef struct s_light {
@@ -74,6 +78,27 @@ typedef struct s_scene {
     int num_lights;
 } t_scene;
 
+
+typedef struct s_render_data {
+    mlx_t *mlx;
+    mlx_image_t *img;
+    t_scene *scene;
+    int threads_completed;
+    int rendering_finished;  // Add this flag
+    pthread_mutex_t mutex;
+    int current_row;
+    int render_complete;
+    struct timeval start_time;
+    struct timeval end_time;
+} t_render_data;
+
+typedef struct s_thread_data {
+    t_render_data *render_data;
+    int start_row;
+    int end_row;
+    int thread_id;
+    int num_threads;
+} t_thread_data;
 
 
 #endif // SCENE_H
