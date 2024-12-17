@@ -433,13 +433,16 @@ int find_sphere_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
 int find_cylinder_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
     int i = 0;
     double t_cy;
+    t_cylinder *cylinder;
 
     while (i < scene->num_cylinders) {
-        if (intersect_cylinder(ray, &scene->cylinders[i], &t_cy) && t_cy < hit->t) {
+        cylinder = &scene->cylinders[i];
+        if (intersect_cylinder(ray, cylinder, &t_cy) && t_cy < hit->t) {
             hit->hit = 1;
             hit->t = t_cy;
             hit->type = CYLINDER;
             hit->index = i;
+        //break
         }
         i++;
     }
@@ -447,33 +450,41 @@ int find_cylinder_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
 }
 
 // Find closest intersection with discs
-int find_disc_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
-    int i = 0;
-    double t_disc;
 
-    while (i < scene->num_discs) {
-        if (intersect_disc(ray, &scene->discs[i], &t_disc) && t_disc < hit->t) {
+
+// Find closest intersection with planes
+int find_plane_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
+    int i = 0;
+    double x_plane;
+    t_plane *plane;
+
+    while (i < scene->num_planes) {
+        plane = &scene->planes[i]; // Cache the current plane
+        if (intersect_plane(ray, plane, &x_plane) && x_plane < hit->t) {
             hit->hit = 1;
-            hit->t = t_disc;
-            hit->type = DISC;
+            hit->t = x_plane;
+            hit->type = PLANE;
             hit->index = i;
+            // Uncomment for early exit:
+            // break;
         }
         i++;
     }
     return hit->hit;
 }
-
-// Find closest intersection with planes
-int find_plane_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
+int find_disc_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
     int i = 0;
-    double t_plane;
+    double x_disc;
+    t_disc *disc;
 
-    while (i < scene->num_planes) {
-        if (intersect_plane(ray, &scene->planes[i], &t_plane) && t_plane < hit->t) {
+    while (i < scene->num_discs) {
+        disc = &scene->discs[i]; // Cache the current disc
+        if (intersect_disc(ray, disc, &x_disc) && x_disc < hit->t) {
             hit->hit = 1;
-            hit->t = t_plane;
-            hit->type = PLANE;
+            hit->t = x_disc;
+            hit->type = DISC;
             hit->index = i;
+            //break
         }
         i++;
     }
@@ -481,45 +492,39 @@ int find_plane_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit) {
 }
 
 // Handle color calculation for objects with checkerboard pattern
-t_color handle_checkerboard_color(t_hit_record *hit, t_scene *scene, t_vector normal) {
+t_color handle_checkerboard_color(t_hit_record *hit, t_scene *scene, t_vector normal)
+{
     t_color black = {255, 0, 0};
     t_color white = {0, 0, 255};
     t_color final_color = {0, 0, 0};
+    t_color object_color;
 
-    switch (hit->type) {
-        case SPHERE: {
-            t_sphere *sphere = &scene->spheres[hit->index];
-            t_vector local_point = subtract(hit->point, sphere->center);
-            double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-            double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
-            
-            int check_u = (int)(u * 20.0) % 2;
-            int check_v = (int)(v * 20.0) % 2;
-            
-            t_color object_color = (check_u == check_v) ? white : black;
-            final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
-            break;
-        }
-        case CYLINDER: {
-            t_cylinder *cylinder = &scene->cylinders[hit->index];
-            int is_black = is_checkerboard(hit->point, cylinder, 0.5);
-            t_color object_color = is_black ? black : white;
-            final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
-            break;
-        }
-        case PLANE: {
-            t_color object_color = get_plane_checkerboard_color(hit->point, black, white, normal, 0.5);
-            final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
-            break;
-        }
-        case DISC: {
-            t_disc *disc = &scene->discs[hit->index];
-            t_color object_color = get_disc_checkerboard_color(hit->point, disc, black, white, 0.5);
-            final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
-            break;
-        }
-        default:
-            break;
+    if (hit->type == SPHERE) {
+        t_sphere *sphere = &scene->spheres[hit->index];
+        t_vector local_point = subtract(hit->point, sphere->center);
+        double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+        double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
+
+        int check_u = (int)(u * 20.0) % 2;
+        int check_v = (int)(v * 20.0) % 2;
+
+        object_color = (check_u == check_v) ? white : black;
+        final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
+    }
+    else if (hit->type == CYLINDER) {
+        t_cylinder *cylinder = &scene->cylinders[hit->index];
+        int is_black = is_checkerboard(hit->point, cylinder, 0.5);
+        object_color = is_black ? black : white;
+        final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
+    }
+    else if (hit->type == PLANE) {
+        object_color = get_plane_checkerboard_color(hit->point, black, white, normal, 0.5);
+        final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
+    }
+    else if (hit->type == DISC) {
+        t_disc *disc = &scene->discs[hit->index];
+        object_color = get_disc_checkerboard_color(hit->point, disc, black, white, 0.5);
+        final_color = apply_lighting(hit->point, normal, object_color, scene, 0);
     }
 
     return final_color;
@@ -530,59 +535,56 @@ t_color calculate_final_color(t_hit_record *hit, t_ray *ray, t_scene *scene, t_v
     t_color final_color = {0, 0, 0};
     t_color black = {255, 0, 0};
     t_color white = {0, 0, 255};
+    t_material *material = NULL;
 
-    // Choose color based on checkerboard or material color
-    switch (hit->type) {
-        case SPHERE: {
-            t_sphere *sphere = &scene->spheres[hit->index];
-            final_color = sphere->material.checker 
-                ? handle_checkerboard_color(hit, scene, normal)
-                : apply_lighting(hit->point, normal, sphere->material.color, scene, depth);
-            hit->material = sphere->material;
-            break;
-        }
-        case CYLINDER: {
-            t_cylinder *cylinder = &scene->cylinders[hit->index];
-            final_color = cylinder->material.checker
-                ? handle_checkerboard_color(hit, scene, normal)
-                : apply_lighting(hit->point, normal, cylinder->material.color, scene, depth);
-            hit->material = cylinder->material;
-            break;
-        }
-        case PLANE: {
-            t_plane *plane = &scene->planes[hit->index];
-            final_color = plane->material.checker
-                ? handle_checkerboard_color(hit, scene, normal)
-                : apply_lighting(hit->point, normal, plane->material.color, scene, depth);
-            hit->material = plane->material;
-            break;
-        }
-        case DISC: {
-            t_disc *disc = &scene->discs[hit->index];
-            final_color = disc->material.checker
-                ? handle_checkerboard_color(hit, scene, normal)
-                : apply_lighting(hit->point, normal, disc->color, scene, depth);
-            hit->material = disc->material;
-            break;
-        }
+    // Determine the object's material and color
+    if (hit->type == SPHERE) {
+        t_sphere *sphere = &scene->spheres[hit->index];
+        material = &sphere->material;
+        final_color = material->checker 
+            ? handle_checkerboard_color(hit, scene, normal)
+            : apply_lighting(hit->point, normal, material->color, scene, depth);
     }
+    else if (hit->type == CYLINDER) {
+        t_cylinder *cylinder = &scene->cylinders[hit->index];
+        material = &cylinder->material;
+        final_color = material->checker 
+            ? handle_checkerboard_color(hit, scene, normal)
+            : apply_lighting(hit->point, normal, material->color, scene, depth);
+    }
+    else if (hit->type == PLANE) {
+        t_plane *plane = &scene->planes[hit->index];
+        material = &plane->material;
+        final_color = material->checker 
+            ? handle_checkerboard_color(hit, scene, normal)
+            : apply_lighting(hit->point, normal, material->color, scene, depth);
+    }
+    else if (hit->type == DISC) {
+        t_disc *disc = &scene->discs[hit->index];
+        material = &disc->material;
+        final_color = material->checker 
+            ? handle_checkerboard_color(hit, scene, normal)
+            : apply_lighting(hit->point, normal, disc->color, scene, depth);
+    }
+
+    // Store the material in the hit record
+    if (material)
+        hit->material = *material;
 
     // Handle reflection
     if (hit->material.reflectivity > 0.0) {
         t_ray reflection_ray = get_reflection_ray(hit->point, normal, *ray);
-        reflection_ray.origin = add(reflection_ray.origin, 
-                                    multiply_scalar(reflection_ray.direction, 0.001));
+        reflection_ray.origin = add(reflection_ray.origin, multiply_scalar(reflection_ray.direction, 0.001));
         t_color reflected_color = trace_ray(reflection_ray, scene, depth + 1);
         final_color = blend_colors(final_color, reflected_color, hit->material.reflectivity);
     }
 
-    // Handle transparency
+    // Handle transparency/refraction
     if (hit->material.transparency > 0.0) {
         float eta_ratio = 1.0 / hit->material.refractive_index;
         t_vector refracted_dir = refract(ray->direction, normal, eta_ratio);
         t_ray refracted_ray = {hit->point, refracted_dir};
-        refracted_ray.origin = add(refracted_ray.origin, 
-                                   multiply_scalar(refracted_ray.direction, 0.001));
+        refracted_ray.origin = add(refracted_ray.origin, multiply_scalar(refracted_ray.direction, 0.001));
         t_color refracted_color = trace_ray(refracted_ray, scene, depth + 1);
         final_color = blend_colors(final_color, refracted_color, hit->material.transparency);
     }
@@ -597,6 +599,8 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth) {
 
     t_hit_record hit = {0};
     hit.t = INFINITY;
+
+    ray.direction = normalize(ray.direction);
 
     // Check intersections with all object types
     find_sphere_intersection(&ray, scene, &hit);
@@ -613,79 +617,73 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth) {
 
     // Get surface normal based on object type
     t_vector normal;
-    switch (hit.type) {
-        case SPHERE:
-            normal = normalize(subtract(hit.point, scene->spheres[hit.index].center));
-            break;
-        case CYLINDER:
-            normal = get_cylinder_normal(hit.point, &scene->cylinders[hit.index]);
-            break;
-        case PLANE:
-            normal = scene->planes[hit.index].normal;
-            break;
-        case DISC:
-            normal = scene->discs[hit.index].normal;
-            break;
-    }
+    if (hit.type == SPHERE)
+        normal = normalize(subtract(hit.point, scene->spheres[hit.index].center));
+    else if (hit.type == CYLINDER)
+        normal = get_cylinder_normal(hit.point, &scene->cylinders[hit.index]);
+    else if (hit.type == PLANE)
+        normal = scene->planes[hit.index].normal;
+    else if (hit.type == DISC)
+        normal = scene->discs[hit.index].normal;
+    else
+        return (t_color){0, 0, 0}; // Safety check in case of unexpected type
 
     // Calculate and return final color
     return calculate_final_color(&hit, &ray, scene, normal, depth);
 }
 
-double schlick_reflection_coefficient(double cos_theta, double refractive_index) {
-    double r0 = pow((1 - refractive_index) / (1 + refractive_index), 2);
-    return r0 + (1 - r0) * pow((1 - cos_theta), 5);
-}
 // Modify t_render_data to include thread management
 // New function to handle rendering in threads
 void *render_thread(void *arg)
 {
-    double reflectivity = 0.0;
     t_thread_data *thread_data = (t_thread_data *)arg;
     t_render_data *data = thread_data->render_data;
-    t_color black = {0, 0, 0};
-    t_color white = {255, 255, 255};
-    t_vector hit_point, normal;
-	// pthread_detach(pthread_self());
-    int x;
-    int y;
+    t_color final_color;
+    uint32_t color_buffer[WIDTH]; // Per-thread buffer for one row
     int thread_id = thread_data->thread_id;
     int num_threads = thread_data->num_threads;
-y = 0;
-while (y < HEIGHT) {
-    x = 0;
-    while (x < WIDTH) {
-        int pixel_index = y * WIDTH + x;
-        if (pixel_index % num_threads == thread_id)
+
+    for (int y = 0; y < HEIGHT; y++)
+    {
+        int write_required = 0; // Flag to avoid unnecessary writes
+        for (int x = 0; x < WIDTH; x++)
         {
-            t_ray ray = create_ray(x, y, &data->scene->camera);
-            t_color final_color = trace_ray(ray, data->scene, 5);
-            double t;
-            uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
+            int pixel_index = y * WIDTH + x;
+            if (pixel_index % num_threads == thread_id)
+            {
+                t_ray ray = create_ray(x, y, &data->scene->camera);
+                final_color = trace_ray(ray, data->scene, 5);
+                color_buffer[x] = (final_color.r << 24) | (final_color.g << 16) | 
+                                  (final_color.b << 8) | 0xFF;
+                write_required = 1; // This thread has work to write
+            }
+        }
+        
+        // Write to the image buffer once per row
+        if (write_required)
+        {
             pthread_mutex_lock(&data->mutex);
-            mlx_put_pixel(data->img, x, y, color);
+            for (int x = 0; x < WIDTH; x++)
+            {
+                int pixel_index = y * WIDTH + x;
+                if (pixel_index % num_threads == thread_id)
+                    mlx_put_pixel(data->img, x, y, color_buffer[x]);
+            }
             pthread_mutex_unlock(&data->mutex);
         }
-        x++;
     }
-    y++;
-}
 
     // Update thread completion count
     pthread_mutex_lock(&data->mutex);
     data->threads_completed++;
-    // If this is the last thread to complete
     if (data->threads_completed == NUM_THREADS)
     {
         gettimeofday(&data->end_time, NULL);
         double elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + 
-                            (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
+                              (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
         printf("Rendering took %f seconds\n", elapsed_time);
-        
-        // Save the image
+
         save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
-        
-        // Set the finished flag instead of exiting
         data->rendering_finished = 1;
     }
     pthread_mutex_unlock(&data->mutex);

@@ -7,6 +7,12 @@
 
 // Function to render the scene
 void render_scene(mlx_t *mlx, t_scene *scene);
+int find_sphere_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit);
+int find_cylinder_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit);
+int find_plane_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit);
+int find_disc_intersection(t_ray *ray, t_scene *scene, t_hit_record *hit);
+
+
 
 // Ray-Object intersection functions
 int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t);
