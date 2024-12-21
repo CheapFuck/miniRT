@@ -459,6 +459,15 @@ while (i < scene->num_planes) {
     return 0; // Not in shadow
 }
 
+static t_color	compute_ambient_light(t_color light_contribution,
+	double ambient_ratio)
+{
+	light_contribution.r = light_contribution.r * ambient_ratio;
+	light_contribution.g = light_contribution.g * ambient_ratio;
+	light_contribution.b = light_contribution.b * ambient_ratio;
+	return (light_contribution);
+}
+
 t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene, int depth)
 {
     int i;
@@ -466,11 +475,12 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
     if (depth > MAX_REFLECTION_DEPTH)
         return ((t_color){0, 0, 0});
     t_color light_contribution = {0, 0, 0};
+	light_contribution = compute_ambient_light(scene->ambient.color,scene->ambient.ratio);
 
     // Ambient lighting
-    light_contribution.r += 255 * scene->ambient.ratio;
-    light_contribution.g += 255 * scene->ambient.ratio;
-    light_contribution.b += 255 * scene->ambient.ratio;
+    // light_contribution.r += 255 * scene->ambient.ratio;
+    // light_contribution.g += 255 * scene->ambient.ratio;
+    // light_contribution.b += 255 * scene->ambient.ratio;
 
     // View direction (from hit point to camera)
     t_vector view_dir = normalize(subtract(scene->camera.pos, hit_point));

@@ -3,7 +3,7 @@
 
 #include "minirt.h"
 
-#define MAX_REFLECTION_DEPTH 16
+#define MAX_REFLECTION_DEPTH 8
 
 // Function to render the scene
 void render_scene(mlx_t *mlx, t_scene *scene);

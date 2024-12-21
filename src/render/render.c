@@ -299,11 +299,15 @@ while (i < scene->num_planes)
             {
                 t_plane *plane = &scene->planes[hit.index];
                 normal = plane->normal;
-                
+                normal = plane->normal;
+    			if (dot(ray.direction, normal) > 0)
+	    			normal = multiply_scalar(normal, -1); // Flip the normal
+
+                // printf("plane->material.checker: %i\n", plane->material.checker);
                 if (plane->material.checker == 1)
                 {
                     // t_color object_color = get_checkerboard_color(hit.point, plane, black, white, 1.0);
-                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
+                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.05);
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
@@ -477,19 +481,37 @@ int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
 }
 
 // Function to create a ray from the camera for a specific pixel
-t_ray create_ray(int x, int y, t_camera *camera)
+t_ray	create_ray(int x, int y, t_camera *camera)
 {
-    t_ray ray;
-    ray.origin = camera->pos;
+	t_ray	ray;
+	t_vector	forward, right, up;
+	t_vector	image_point;
+    t_vector    r_vector;
 
-    // Calculate direction from camera to pixel (simple perspective projection)
-    ray.direction.x = (2 * (x + 0.5) / (double)WIDTH - 1) * tan(camera->fov / 2 * M_PI / 180);
-    ray.direction.y = (1 - 2 * (y + 0.5) / (double)HEIGHT) * tan(camera->fov / 2 * M_PI / 180);
-    ray.direction.z = 1; // Assume camera is looking along the positive z-axis
-    ray.direction = normalize(ray.direction);
+    r_vector.x = 0;
+    r_vector.y = 1;
+    r_vector.z = 0;
+	// Step 1: Set up camera basis vectors
+	forward = normalize(camera->orientation); // Camera view direction
+	right = normalize(cross(r_vector, forward)); // Right vector
+	up = cross(forward, right); // Up vector
 
-    return ray;
+	// Step 2: Map pixel coordinates to normalized device coordinates
+	double aspect_ratio = (double)WIDTH / HEIGHT;
+	double fov_scale = tan((camera->fov * M_PI / 180) / 2);
+
+	image_point.x = (2 * (x + 0.5) / WIDTH - 1) * aspect_ratio * fov_scale;
+	image_point.y = (1 - 2 * (y + 0.5) / HEIGHT) * fov_scale;
+	image_point.z = 1;
+
+	// Step 3: Transform image point to world space
+	ray.origin = camera->pos;
+	ray.direction = normalize(add(add(scale_vector(right, image_point.x),
+									scale_vector(up, image_point.y)),
+									scale_vector(forward, image_point.z)));
+	return (ray);
 }
+
 
 t_vector cross(t_vector a, t_vector b)
 {
