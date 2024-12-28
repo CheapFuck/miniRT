@@ -37,20 +37,12 @@ int main(int argc, char **argv)
     mlx_t *mlx;
     t_scene scene;
 
-    if (argc != 2) {
+    if (argc != 2)
         exit_with_error("Usage: ./miniRT <scene.rt>");
-    }
-
-    // Initialize MLX42
     mlx = mlx_init(WIDTH, HEIGHT, "miniRT", true);
     if (!mlx)
         exit_with_error("Error initializing MLX42");
-
-    // Load and parse the scene
     init_scene(&scene);
-
-    // scene.spheres->shininess = 1000;
-
     parse_file(argv[1], &scene);
    	mlx_loop_hook(mlx, ft_hook, mlx);
     render_scene(mlx, &scene);

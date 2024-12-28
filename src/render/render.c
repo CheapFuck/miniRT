@@ -299,7 +299,7 @@ while (i < scene->num_planes)
             {
                 t_plane *plane = &scene->planes[hit.index];
                 normal = plane->normal;
-                // normal = plane->normal;
+                normal = plane->normal;
     			if (dot(ray.direction, normal) > 0)
 	    			normal = multiply_scalar(normal, -1); // Flip the normal
 
