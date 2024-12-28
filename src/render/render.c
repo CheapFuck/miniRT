@@ -299,7 +299,7 @@ while (i < scene->num_planes)
             {
                 t_plane *plane = &scene->planes[hit.index];
                 normal = plane->normal;
-                normal = plane->normal;
+                // normal = plane->normal;
     			if (dot(ray.direction, normal) > 0)
 	    			normal = multiply_scalar(normal, -1); // Flip the normal
 
@@ -307,7 +307,7 @@ while (i < scene->num_planes)
                 if (plane->material.checker == 1)
                 {
                     // t_color object_color = get_checkerboard_color(hit.point, plane, black, white, 1.0);
-                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.05);
+                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                 }
                 else
@@ -480,20 +480,52 @@ int32_t ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
     return (r << 24 | g << 16 | b << 8 | a);
 }
 
+t_vector	scale(t_vector v, double s)
+{
+	t_vector	result;
+
+	result.x = v.x * s;
+	result.y = v.y * s;
+	result.z = v.z * s;
+	return (result);
+}
 // Function to create a ray from the camera for a specific pixel
+// t_ray	create_ray(int x, int y, t_camera *camera)
+// {
+// 	t_ray		ray;
+// 	t_vector	r_vector;
+// 	t_vector	dir[3];
+// 	double		aspect_fov_scale;
+// 	t_vector	image_point;
+
+// 	r_vector.x = 0;
+// 	r_vector.y = 1;
+// 	r_vector.z = 0;
+// 	dir[0] = normalize(camera->orientation);
+// 	dir[1] = normalize(cross(r_vector, dir[0]));
+// 	dir[2] = cross(dir[0], dir[1]);
+// 	aspect_fov_scale = tan((camera->fov * M_PI / 180) / 2) * (double)WIDTH
+// 		/ HEIGHT;
+// 	image_point.x = (2 * (x + 0.5) / WIDTH - 1) * aspect_fov_scale;
+// 	image_point.y = (1 - 2 * (y + 0.5) / HEIGHT) * aspect_fov_scale;
+// 	image_point.z = 1;
+// 	ray.origin = camera->pos;
+// 	ray.direction = normalize(add(add(scale(dir[1], image_point.x),
+// 					scale(dir[2], image_point.y)), scale(dir[0],
+// 					image_point.z)));
+// 	return (ray);
+// }
 t_ray	create_ray(int x, int y, t_camera *camera)
 {
 	t_ray	ray;
 	t_vector	forward, right, up;
 	t_vector	image_point;
-    t_vector    r_vector;
 
-    r_vector.x = 0;
-    r_vector.y = 1;
-    r_vector.z = 0;
 	// Step 1: Set up camera basis vectors
 	forward = normalize(camera->orientation); // Camera view direction
-	right = normalize(cross(r_vector, forward)); // Right vector
+	
+    t_vector a = {0,1,0};
+    right = normalize(cross(a, forward)); // Right vector
 	up = cross(forward, right); // Up vector
 
 	// Step 2: Map pixel coordinates to normalized device coordinates
@@ -506,9 +538,9 @@ t_ray	create_ray(int x, int y, t_camera *camera)
 
 	// Step 3: Transform image point to world space
 	ray.origin = camera->pos;
-	ray.direction = normalize(add(add(scale_vector(right, image_point.x),
-									scale_vector(up, image_point.y)),
-									scale_vector(forward, image_point.z)));
+	ray.direction = normalize(add(add(scale(right, image_point.x),
+									scale(up, image_point.y)),
+									scale(forward, image_point.z)));
 	return (ray);
 }
 

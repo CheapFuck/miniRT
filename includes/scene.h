@@ -19,7 +19,7 @@ typedef struct s_light {
 typedef struct s_plane {
     t_vector point;
     t_vector normal;
-    // t_color color;
+    t_color color;
     t_material  material;
     // bool checker;
     // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
@@ -59,21 +59,24 @@ typedef struct s_sphere {
     // double reflectivity;  // 0.0 to 1.0, where 1.0 is perfect mirror
 } t_sphere;
 
-typedef struct s_scene {
-    t_ambient ambient;       // Add this field for ambient lighting
-    t_camera camera;
-    t_light lights[10];
-    t_plane planes[10]; // Add planes here
-    t_sphere spheres[10]; // Adjust size as needed
-    t_cylinder cylinders[10];
-   	t_disc	    discs[20];
-    int num_spheres;
-    int num_planes;
-   	int			num_cylinders;
-   	int			num_discs;
-    int num_lights;
-} t_scene;
 
-
+typedef struct s_scene
+{
+	t_ambient	ambient;
+	t_camera	camera;
+	t_light		lights[10];
+	t_plane		planes[10];
+	t_sphere	spheres[10];
+	t_cylinder	cylinders[10];
+	t_disc		discs[10];
+	int			num_spheres;
+	int			num_planes;
+	int			num_cylinders;
+	int			num_discs;
+	int			num_lights;
+	int			has_ambient;
+	int			has_camera;
+	int			has_light;
+}	t_scene;
 
 #endif // SCENE_H

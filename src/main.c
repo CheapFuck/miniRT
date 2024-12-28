@@ -19,24 +19,36 @@ void ft_hook(void* param)
 }
 
 
+// Initialize scene structure
+static void	init_scene(t_scene *scene)
+{
+	scene->num_spheres = 0;
+	scene->num_cylinders = 0;
+	scene->num_lights = 0;
+	scene->num_planes = 0;
+	scene->num_discs = 0;
+	scene->has_ambient = 0;
+	scene->has_camera = 0;
+	scene->has_light = 0;
+}
+
 int main(int argc, char **argv)
 {
+    mlx_t *mlx;
+    t_scene scene;
+
     if (argc != 2) {
         exit_with_error("Usage: ./miniRT <scene.rt>");
     }
 
     // Initialize MLX42
-    mlx_t *mlx = mlx_init(WIDTH, HEIGHT, "miniRT", true);
+    mlx = mlx_init(WIDTH, HEIGHT, "miniRT", true);
     if (!mlx)
         exit_with_error("Error initializing MLX42");
 
     // Load and parse the scene
-      t_scene scene;
-    scene.num_spheres = 0;
-    scene.num_cylinders = 0;
-    scene.num_lights = 0;
-    scene.num_cylinders = 0;
-    scene.num_planes = 0;
+    init_scene(&scene);
+
     // scene.spheres->shininess = 1000;
 
     parse_file(argv[1], &scene);

@@ -41,8 +41,28 @@ double dot(t_vector a, t_vector b)
 
 t_vector normalize(t_vector v)
 {
-    double length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    double length;
     t_vector result;
+
+    // Check if any component of the vector is NaN or invalid
+    if (isnan(v.x) || isnan(v.y) || isnan(v.z)) {
+        // Handle the invalid case
+        result.x = 0;
+        result.y = 0;
+        result.z = 0;
+        return result;
+    }
+    // Calculate the length of the vector
+    length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    // Check for zero-length vector
+    if (length == 0) {
+        // Handle zero-length vector
+        result.x = 0;
+        result.y = 0;
+        result.z = 0;
+        return result;
+    }
+    // Proceed with normalization
     result.x = v.x / length;
     result.y = v.y / length;
     result.z = v.z / length;

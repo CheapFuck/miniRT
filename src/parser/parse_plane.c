@@ -80,6 +80,8 @@ void parse_plane(char *line, t_scene *scene) {
         clean_2d_array(tokens);
         return;
     }
+        printf("numplanes: %i\n", scene->num_planes);
+
     scene->planes[scene->num_planes] = plane;
     scene->num_planes++;
 
