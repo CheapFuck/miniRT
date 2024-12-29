@@ -102,11 +102,15 @@ t_color	combine_color(t_color light_color, t_color object_color)
 	return (result);
 }
 
-t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale)
+t_color get_cylinder_checkerboard_color(t_hit_record *hit, t_cylinder *cylinder)
 {
-    if (is_cylinder_checkerboard(point, cylinder, scale))
-        return color1;
-    return color2;
+    t_color black = {0, 0, 0};
+    t_color white = {255, 255, 255};
+    double scale = 0.5;
+    
+    if (is_checkerboard(hit->point, cylinder, scale))
+        return black;
+    return white;
 }
 
 int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
@@ -141,281 +145,529 @@ int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 }
 
 // Modified color calculation function with reflection support
+// t_color trace_ray(t_ray ray, t_scene *scene, int depth)
+// {
+//     if (depth > MAX_REFLECTION_DEPTH)
+//         return ((t_color){0, 0, 0});
+
+
+
+//     t_hit_record hit;
+//     hit.t = INFINITY;
+//     hit.hit = 0;
+//     t_color light_contribution = {0, 0, 0};
+//     // double t = INFINITY;
+//     // int hit = 0;
+//     t_color final_color = {0, 0, 0};
+//     double reflectivity = 0.0;
+//     double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
+//     double refractive_index = 0.0;
+//     t_vector normal;
+//     t_color black = {255, 0, 0};
+//     t_color white = {0, 0, 255};
+//     int i;
+//     // t_object_type hit_type;
+//     hit.index = -1;
+
+//     // Check sphere intersections
+//    i = 0;
+// while (i < scene->num_spheres)
+// {
+//     double t_sphere;
+//     t_sphere = DBL_MAX;
+//     ray.direction = normalize(ray.direction);
+//     if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
+//     {
+//         hit.hit = 1;
+//         hit.t = t_sphere;
+//         hit.type = SPHERE;
+//         hit.index = i;
+//     }
+//     i++;
+// }
+
+//     // Check cylinder intersections
+// i = 0;
+// while (i < scene->num_cylinders)
+// {
+//     double t_cy;
+//     t_cy = DBL_MAX;
+//     if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
+//     {
+//         hit.hit = 1;
+//         hit.t = t_cy;
+//         hit.type = CYLINDER;
+//         hit.index = i;
+//     }
+//     i++;
+// }
+// i = 0;
+// while (i < scene->num_discs)
+// {
+//     double t_disc;
+//     t_disc = DBL_MAX;
+//     if (intersect_disc(&ray, &scene->discs[i], &t_disc) && t_disc < hit.t)
+//     {
+//         hit.hit = 1;
+//         hit.t = t_disc;
+//         hit.type = DISC;
+//         hit.index = i;
+//     }
+//     i++;
+// }
+
+
+//     // Check plane intersections
+// i = 0;
+// while (i < scene->num_planes)
+// {
+//     double t_plane;
+//     t_plane = DBL_MAX;
+//     if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
+//     {
+//         hit.hit = 1;
+//         hit.t = t_plane;
+//         hit.type = PLANE;
+//         hit.index = i;
+//     }
+//     i++;
+// }
+
+
+
+
+//     // Calculate color based on closest intersection
+//     if (hit.hit)
+//     {
+//         hit.point = add(ray.origin, multiply_scalar(ray.direction, hit.t));
+
+//         switch (hit.type)
+//         {
+//             case SPHERE:
+//             {
+//                 t_sphere *sphere = &scene->spheres[hit.index];
+//                 normal = normalize(subtract(hit.point, sphere->center));
+//                                         // printf("LALALA\n");
+
+//                 if (sphere->material.checker == 1)
+//                 {
+//                         // printf("LBLBLB\n");
+
+//                     t_vector local_point = subtract(hit.point, sphere->center);
+//                     double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+//                     double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
+                    
+//                     int check_u = (int)(u * 20.0) % 2;
+//                     int check_v = (int)(v * 20.0) % 2;
+                    
+//                     t_color object_color = (check_u == check_v) ? white : black;
+//                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+//                     // final_color = apply_lighting(hit.point, normal, object_color, scene);
+//                 }
+//                 else
+//                 {
+//                     final_color = apply_lighting(hit.point, normal, sphere->material.color, scene, depth + 1);
+//                 }
+//                 // reflectivity = sphere->material.reflectivity;
+//                 // transparency = sphere->material.transparency;
+//                 // refractive_index = sphere->material.refractive_index;
+
+//                 hit.material.reflectivity = sphere->material.reflectivity;
+//                 hit.material.transparency = sphere->material.transparency;
+//                 hit.material.refractive_index = sphere->material.refractive_index;
+
+//                 break;
+//             }
+//             case CYLINDER:
+//             {
+//                 t_cylinder *cylinder = &scene->cylinders[hit.index];
+//                 normal = get_cylinder_normal(hit.point, cylinder);  // Make sure you have this function
+                
+//                if (cylinder->material.checker == 1)
+//                 {
+                    
+//                     // t_color object_color = get_checkerboard_color(hit.point, cylinder, black, white, 1.0);
+//                     // t_color object_color = get_checkerboard_color(hit.point, &scene->cylinders[i], black, white, .5);
+//                     // t_color     object_color = get_cylinder_checkerboard_color(hit.point, &scene->cylinders[i], black, white, 10);
+//                     int is_black = is_checkerboard(hit.point, cylinder, 0.5); // Scale = 1.0 for fine squares
+                    
+//                     t_color object_color = is_black ? black : white;
+//                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+//                     // final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+//                 }
+//                 else
+//                 {
+//                     final_color = apply_lighting(hit.point, normal, cylinder->material.color, scene, depth + 1);
+//                 }
+//                 hit.material.reflectivity = cylinder->material.reflectivity;
+//                 hit.material.transparency = cylinder->material.transparency;
+//                 hit.material.refractive_index = cylinder->material.refractive_index;
+//                 break;
+//             }
+//             case PLANE:
+//             {
+//                 t_plane *plane = &scene->planes[hit.index];
+//                 normal = plane->normal;
+//                 normal = plane->normal;
+//     			if (dot(ray.direction, normal) > 0)
+// 	    			normal = multiply_scalar(normal, -1); // Flip the normal
+
+//                 // printf("plane->material.checker: %i\n", plane->material.checker);
+//                 if (plane->material.checker == 1)
+//                 {
+//                     // t_color object_color = get_checkerboard_color(hit.point, plane, black, white, 1.0);
+//                     t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
+//                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+//                 }
+//                 else
+//                 {
+//                     final_color = apply_lighting(hit.point, normal, plane->material.color, scene, depth + 1);
+//                 }
+//                 hit.material.reflectivity = plane->material.reflectivity;
+//                 hit.material.transparency = plane->material.transparency;
+//                 hit.material.refractive_index = plane->material.refractive_index;
+//                 break;
+//             }
+//             case DISC:
+//             {
+//                 // printf("doe ik dit?\n");
+//                 double t;
+//                	t = INFINITY;
+//                 t_disc *disc = &scene->discs[hit.index];
+//                 normal = disc->normal;
+//         			// normal = normalize(subtract(hit_point, scene->discs[i].center));
+
+//                 	t_color single;
+// 	        t_color gradient;
+//             // hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
+//             // normal = disc->normal;
+// 			// normal = normalize(subtract(hit.point, disc->center));
+//             // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+            
+// 			// single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+// 			// final_color = combine_color(single, gradient);
+
+
+//                 if (disc->material.checker == 1)
+//                 {
+//                     // printf("waaaat!?\n");
+//                     // t_color object_color = get_checkerboard_color(hit.point, disc, black, white, 1.0);
+//                     t_color object_color = get_disc_checkerboard_color(hit.point, disc, black, white, 0.5);
+//                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+//                 }
+//                 else
+//                 {
+//                     // printf("jatoc!?\n");
+//                     // hit_point = add(ray.origin, ray.direction);
+//                     gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
+//                     // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
+			        
+//                     gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
+            
+//             // single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
+//     			    // single = apply_lighting(hit_point, disc->normal, disc->color, scene, depth + 1);
+// 	    		    // final_color = combine_color(single, gradient);
+//             		// final_color = single;
+//               		final_color = gradient;
+//                     // final_color = apply_lighting(hit.point, normal, disc->material.color, scene, depth + 1);
+
+//                 }
+//                 hit.material.reflectivity = disc->material.reflectivity;
+//                 hit.material.transparency = disc->material.transparency;
+//                 hit.material.refractive_index = disc->material.refractive_index;
+//                 break;
+//             }
+//         }
+        
+        
+//         if (hit.material.reflectivity > 0.0)
+//         {
+//             double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
+//             // double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
+//             t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);
+//             reflection_ray.origin = add(reflection_ray.origin,
+//                                       multiply_scalar(reflection_ray.direction, 0.001));
+//             t_color reflected_color = trace_ray(reflection_ray, scene, depth + 1);
+//             final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
+//             // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
+//         }
+//   if (hit.material.transparency > 0.0) {
+//             // Ensure eta_ratio is valid before using it
+//             float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
+//             // Check for total internal reflection
+//             if (eta_ratio > 1.0) {
+//                 // Handle total internal reflection case
+//                 t_vector reflected_dir = reflect(ray.direction, hit.normal);
+//                 t_ray reflected_ray = {hit.point, reflected_dir};
+//                 reflected_ray.origin = add(reflected_ray.origin, 
+//                                            multiply_scalar(reflected_ray.direction, 0.001));
+//                 t_color reflected_color = trace_ray(reflected_ray, scene, depth + 1);
+//                 final_color = blend_colors(final_color, reflected_color, hit.material.transparency);
+//             } else {
+//                 // Calculate refraction direction
+//                 t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
+//                 t_ray refracted_ray = {hit.point, refracted_dir};
+//                 refracted_ray.origin = add(refracted_ray.origin, 
+//                                            multiply_scalar(refracted_ray.direction, 0.001));
+//                 t_color refracted_color = trace_ray(refracted_ray, scene, depth + 1);
+//                 // Blend refraction with final color
+//                 final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
+//             }
+        
+//         }
+
+//     }
+
+//     return final_color;
+// }
+
+t_color get_sphere_checkerboard_color(t_hit_record *hit, t_sphere *sphere)
+{
+    // Calculate local hit point relative to the sphere center
+    t_vector local_hit = subtract(hit->point, sphere->center);
+    double theta = atan2(local_hit.z, local_hit.x);
+    double phi = acos(local_hit.y / sphere->radius);
+
+    // Normalize to [0, 1] range
+    double u = (theta + M_PI) / (2 * M_PI);
+    double v = phi / M_PI;
+
+    // Define checkerboard pattern frequency
+    int checker_freq = 10;
+
+    // Determine checkerboard pattern
+    int u_check = (int)(u * checker_freq) % 2;
+    int v_check = (int)(v * checker_freq) % 2;
+
+    if (u_check == v_check)
+        return (t_color){255, 255, 255}; // White
+    else
+        return (t_color){0, 0, 0}; // Black
+}
+
+t_color handle_sphere_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+    t_sphere *sphere = &scene->spheres[hit->index];
+    t_vector normal = normalize(subtract(hit->point, sphere->center));
+
+    if (sphere->material.checker)
+        return apply_lighting(hit->point, normal, get_sphere_checkerboard_color(hit, sphere), scene, depth + 1);
+    else
+        return apply_lighting(hit->point, normal, sphere->material.color, scene, depth + 1);
+}
+t_color handle_cylinder_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+    t_cylinder *cylinder = &scene->cylinders[hit->index];
+    t_color black = {255, 0, 0};
+    t_color white = {0, 0, 255};
+    // Calculate normal for the cylinder surface
+    double projection = dot(subtract(hit->point, cylinder->center), cylinder->orientation);
+    t_vector axis_point = add(cylinder->center, multiply_scalar(cylinder->orientation, projection));
+    t_vector normal = normalize(subtract(hit->point, axis_point));
+
+    if (cylinder->material.checker)
+        return apply_lighting(hit->point, normal, get_cylinder_checkerboard_color(hit, cylinder), scene, depth + 1);
+    else
+        return apply_lighting(hit->point, normal, cylinder->material.color, scene, depth + 1);
+}
+t_color get_plane_checkerboard_color(t_hit_record *hit, t_plane *plane)
+{
+    t_color black = {0, 0, 0};
+    t_color white = {255, 255, 255};
+    double grid_size = 0.5;
+
+    // Create an orthonormal basis for the plane
+    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    if (fabs(dot(up, plane->normal)) > 0.99) // Avoid parallel vectors
+        up = (t_vector){1, 0, 0};
+
+    t_vector x_axis = normalize(cross(up, plane->normal));
+    t_vector y_axis = normalize(cross(plane->normal, x_axis));
+
+    // Project the point onto the plane's local X-Y axes
+    double proj_x = dot(hit->point, x_axis);
+    double proj_y = dot(hit->point, y_axis);
+
+    // Calculate grid coordinates
+    int u = (int)floor(proj_x / grid_size);
+    int v = (int)floor(proj_y / grid_size);
+
+    // Return the checkerboard color
+    if((u + v) % 2)
+        return black;
+    else 
+        return white;
+    // t_color black = {0, 0, 0};
+    // t_color white = {255, 255, 255};
+    // double scale = 0.5;
+
+    // double u = fmod(fabs(hit->point.x) * scale, 1.0);
+    // double v = fmod(fabs(hit->point.z) * scale, 1.0);
+
+    // if (((int)(u * 10) % 2) == ((int)(v * 10) % 2))
+    //     return black;
+    // else
+    //     return white;
+}
+
+
+t_color handle_plane_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+    t_plane *plane = &scene->planes[hit->index];
+    t_vector normal = plane->normal;
+
+    if (plane->material.checker)
+        return apply_lighting(hit->point, normal, get_plane_checkerboard_color(hit, plane), scene, depth + 1);
+    else
+        return apply_lighting(hit->point, normal, plane->material.color, scene, depth + 1);
+}
+
+t_color handle_disc_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+   t_disc *disc = &scene->discs[hit->index];
+   double grid_size = 0.5;
+    t_color black = {0, 0, 0};
+    t_color white = {255, 255, 255};
+
+    // Create an orthonormal basis for the plane
+    t_vector up = {0, 1, 0}; // Arbitrary "up" vector
+    if (fabs(dot(up, disc->normal)) > 0.99) // Avoid parallel vectors
+        up = (t_vector){1, 0, 0};
+
+    t_vector x_axis = normalize(cross(up, disc->normal));
+    t_vector y_axis = normalize(cross(disc->normal, x_axis));
+
+    // Project the point onto the plane's local X-Y axes
+    double proj_x = dot(hit->point, x_axis);
+    double proj_y = dot(hit->point, y_axis);
+
+    // Calculate grid coordinates
+    int u = (int)floor(proj_x / grid_size);
+    int v = (int)floor(proj_y / grid_size);
+
+    if((u + v) % 2)
+        return black;
+    return white;
+}
+
+
+
+
+t_color calculate_reflection(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+    t_ray reflection_ray = get_reflection_ray(hit->point, hit->normal, ray);
+    reflection_ray.origin = add(reflection_ray.origin, multiply_scalar(reflection_ray.direction, 0.001));
+    return trace_ray(reflection_ray, scene, depth + 1);
+}
+
+t_color calculate_refraction(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
+{
+    float eta_ratio = (hit->hit_from_inside) ? hit->material.refractive_index : (1.0 / hit->material.refractive_index);
+    t_vector refracted_dir = refract(ray.direction, hit->normal, eta_ratio);
+    t_ray refracted_ray = {hit->point, refracted_dir};
+    refracted_ray.origin = add(refracted_ray.origin, multiply_scalar(refracted_ray.direction, 0.001));
+    return trace_ray(refracted_ray, scene, depth + 1);
+}
+
+void check_intersections(t_ray ray, t_scene *scene, t_hit_record *hit)
+{
+    double t_temp;
+    int i = 0;
+
+    // Check spheres
+    while (i < scene->num_spheres)
+    {
+        if (intersect_sphere(&ray, &scene->spheres[i], &t_temp) && t_temp < hit->t)
+        {
+            hit->hit = 1;
+            hit->t = t_temp;
+            hit->type = SPHERE;
+            hit->index = i;
+        }
+        i++;
+    }
+    i = 0;
+       while (i < scene->num_cylinders)
+    {
+        if (intersect_cylinder(&ray, &scene->cylinders[i], &t_temp) && t_temp < hit->t)
+        {
+            hit->hit = 1;
+            hit->t = t_temp;
+            hit->type = CYLINDER;
+            hit->index = i;
+        }
+        i++;
+    }
+    i = 0;
+       while (i < scene->num_discs)
+    {
+        if (intersect_disc(&ray, &scene->discs[i], &t_temp) && t_temp < hit->t)
+        {
+            hit->hit = 1;
+            hit->t = t_temp;
+            hit->type = DISC;
+            hit->index = i;
+        }
+        i++;
+    }
+    i = 0;
+   while (i < scene->num_planes)
+    {
+        if (intersect_plane(&ray, &scene->planes[i], &t_temp) && t_temp < hit->t)
+        {
+            hit->hit = 1;
+            hit->t = t_temp;
+            hit->type = PLANE;
+            hit->index = i;
+        }
+        i++;
+    }
+    // Repeat similar for cylinders, discs, and planes...
+}
+
 t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 {
     if (depth > MAX_REFLECTION_DEPTH)
-        return ((t_color){0, 0, 0});
+        return (t_color){0, 0, 0};
 
+    t_hit_record hit = {.t = INFINITY, .hit = 0, .index = -1};
 
+    check_intersections(ray, scene, &hit);
 
-    t_hit_record hit;
-    hit.t = INFINITY;
-    hit.hit = 0;
-    t_color light_contribution = {0, 0, 0};
-    // double t = INFINITY;
-    // int hit = 0;
+    if (!hit.hit)
+        return (t_color){0, 0, 0};
+
+    hit.point = add(ray.origin, multiply_scalar(ray.direction, hit.t));
+
     t_color final_color = {0, 0, 0};
-    double reflectivity = 0.0;
-    double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
-    double refractive_index = 0.0;
-    t_vector normal;
-    t_color black = {255, 0, 0};
-    t_color white = {0, 0, 255};
-    int i;
-    // t_object_type hit_type;
-    hit.index = -1;
 
-    // Check sphere intersections
-   i = 0;
-while (i < scene->num_spheres)
-{
-    double t_sphere;
-    t_sphere = DBL_MAX;
-    ray.direction = normalize(ray.direction);
-    if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
+    // Define function pointers for handling each object type
+    t_color (*handle_hit[4])(t_ray, t_hit_record *, t_scene *, int) = {
+        handle_sphere_hit,
+        handle_cylinder_hit,
+        handle_plane_hit,
+        handle_disc_hit
+    };
+
+    if (hit.type >= 0 && hit.type < 4)
+        final_color = handle_hit[hit.type](ray, &hit, scene, depth);
+
+    if (hit.material.reflectivity > 0.0)
     {
-        hit.hit = 1;
-        hit.t = t_sphere;
-        hit.type = SPHERE;
-        hit.index = i;
+        t_color reflected_color = calculate_reflection(ray, &hit, scene, depth);
+        final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
     }
-    i++;
-}
 
-    // Check cylinder intersections
-i = 0;
-while (i < scene->num_cylinders)
-{
-    double t_cy;
-    t_cy = DBL_MAX;
-    if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
+    if (hit.material.transparency > 0.0)
     {
-        hit.hit = 1;
-        hit.t = t_cy;
-        hit.type = CYLINDER;
-        hit.index = i;
-    }
-    i++;
-}
-i = 0;
-while (i < scene->num_discs)
-{
-    double t_disc;
-    t_disc = DBL_MAX;
-    if (intersect_disc(&ray, &scene->discs[i], &t_disc) && t_disc < hit.t)
-    {
-        hit.hit = 1;
-        hit.t = t_disc;
-        hit.type = DISC;
-        hit.index = i;
-    }
-    i++;
-}
-
-
-    // Check plane intersections
-i = 0;
-while (i < scene->num_planes)
-{
-    double t_plane;
-    t_plane = DBL_MAX;
-    if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
-    {
-        hit.hit = 1;
-        hit.t = t_plane;
-        hit.type = PLANE;
-        hit.index = i;
-    }
-    i++;
-}
-
-
-
-
-    // Calculate color based on closest intersection
-    if (hit.hit)
-    {
-        hit.point = add(ray.origin, multiply_scalar(ray.direction, hit.t));
-
-        switch (hit.type)
-        {
-            case SPHERE:
-            {
-                t_sphere *sphere = &scene->spheres[hit.index];
-                normal = normalize(subtract(hit.point, sphere->center));
-                                        // printf("LALALA\n");
-
-                if (sphere->material.checker == 1)
-                {
-                        // printf("LBLBLB\n");
-
-                    t_vector local_point = subtract(hit.point, sphere->center);
-                    double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-                    double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
-                    
-                    int check_u = (int)(u * 20.0) % 2;
-                    int check_v = (int)(v * 20.0) % 2;
-                    
-                    t_color object_color = (check_u == check_v) ? white : black;
-                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
-                    // final_color = apply_lighting(hit.point, normal, object_color, scene);
-                }
-                else
-                {
-                    final_color = apply_lighting(hit.point, normal, sphere->material.color, scene, depth + 1);
-                }
-                // reflectivity = sphere->material.reflectivity;
-                // transparency = sphere->material.transparency;
-                // refractive_index = sphere->material.refractive_index;
-
-                hit.material.reflectivity = sphere->material.reflectivity;
-                hit.material.transparency = sphere->material.transparency;
-                hit.material.refractive_index = sphere->material.refractive_index;
-
-                break;
-            }
-            case CYLINDER:
-            {
-                t_cylinder *cylinder = &scene->cylinders[hit.index];
-                normal = get_cylinder_normal(hit.point, cylinder);  // Make sure you have this function
-                
-               if (cylinder->material.checker == 1)
-                {
-                    
-                    // t_color object_color = get_checkerboard_color(hit.point, cylinder, black, white, 1.0);
-                    // t_color object_color = get_checkerboard_color(hit.point, &scene->cylinders[i], black, white, .5);
-                    // t_color     object_color = get_cylinder_checkerboard_color(hit.point, &scene->cylinders[i], black, white, 10);
-                    int is_black = is_checkerboard(hit.point, cylinder, 0.5); // Scale = 1.0 for fine squares
-                    
-                    t_color object_color = is_black ? black : white;
-                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
-                    // final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
-                }
-                else
-                {
-                    final_color = apply_lighting(hit.point, normal, cylinder->material.color, scene, depth + 1);
-                }
-                hit.material.reflectivity = cylinder->material.reflectivity;
-                hit.material.transparency = cylinder->material.transparency;
-                hit.material.refractive_index = cylinder->material.refractive_index;
-                break;
-            }
-            case PLANE:
-            {
-                t_plane *plane = &scene->planes[hit.index];
-                normal = plane->normal;
-                normal = plane->normal;
-    			if (dot(ray.direction, normal) > 0)
-	    			normal = multiply_scalar(normal, -1); // Flip the normal
-
-                // printf("plane->material.checker: %i\n", plane->material.checker);
-                if (plane->material.checker == 1)
-                {
-                    // t_color object_color = get_checkerboard_color(hit.point, plane, black, white, 1.0);
-                    t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
-                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
-                }
-                else
-                {
-                    final_color = apply_lighting(hit.point, normal, plane->material.color, scene, depth + 1);
-                }
-                hit.material.reflectivity = plane->material.reflectivity;
-                hit.material.transparency = plane->material.transparency;
-                hit.material.refractive_index = plane->material.refractive_index;
-                break;
-            }
-            case DISC:
-            {
-                // printf("doe ik dit?\n");
-                double t;
-               	t = INFINITY;
-                t_disc *disc = &scene->discs[hit.index];
-                normal = disc->normal;
-        			// normal = normalize(subtract(hit_point, scene->discs[i].center));
-
-                	t_color single;
-	        t_color gradient;
-            // hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
-            // normal = disc->normal;
-			// normal = normalize(subtract(hit.point, disc->center));
-            // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
-            
-			// single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
-			// final_color = combine_color(single, gradient);
-
-
-                if (disc->material.checker == 1)
-                {
-                    // printf("waaaat!?\n");
-                    // t_color object_color = get_checkerboard_color(hit.point, disc, black, white, 1.0);
-                    t_color object_color = get_disc_checkerboard_color(hit.point, disc, black, white, 0.5);
-                    final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
-                }
-                else
-                {
-                    // printf("jatoc!?\n");
-                    // hit_point = add(ray.origin, ray.direction);
-                    gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
-                    // gradient = apply_lighting(hit_point, normal, scene->discs[i].color, scene, depth + 1);
-			        
-                    gradient = apply_lighting(hit.point, normal, disc->color, scene, depth + 1);
-            
-            // single = apply_lighting(hit_point, scene->discs[i].normal, scene->discs[i].color, scene, depth + 1);
-    			    // single = apply_lighting(hit_point, disc->normal, disc->color, scene, depth + 1);
-	    		    // final_color = combine_color(single, gradient);
-            		// final_color = single;
-              		final_color = gradient;
-                    // final_color = apply_lighting(hit.point, normal, disc->material.color, scene, depth + 1);
-
-                }
-                hit.material.reflectivity = disc->material.reflectivity;
-                hit.material.transparency = disc->material.transparency;
-                hit.material.refractive_index = disc->material.refractive_index;
-                break;
-            }
-        }
-        
-        
-        if (hit.material.reflectivity > 0.0)
-        {
-            double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
-            // double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
-            t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);
-            reflection_ray.origin = add(reflection_ray.origin,
-                                      multiply_scalar(reflection_ray.direction, 0.001));
-            t_color reflected_color = trace_ray(reflection_ray, scene, depth + 1);
-            final_color = blend_colors(final_color, reflected_color, hit.material.reflectivity);
-            // final_color = blend_colors(final_color, reflected_color, reflection_coefficient * hit.material.reflectivity);
-        }
-  if (hit.material.transparency > 0.0) {
-            // Ensure eta_ratio is valid before using it
-            float eta_ratio = (hit.hit_from_inside) ? hit.material.refractive_index : (1.0 / hit.material.refractive_index);
-            // Check for total internal reflection
-            if (eta_ratio > 1.0) {
-                // Handle total internal reflection case
-                t_vector reflected_dir = reflect(ray.direction, hit.normal);
-                t_ray reflected_ray = {hit.point, reflected_dir};
-                reflected_ray.origin = add(reflected_ray.origin, 
-                                           multiply_scalar(reflected_ray.direction, 0.001));
-                t_color reflected_color = trace_ray(reflected_ray, scene, depth + 1);
-                final_color = blend_colors(final_color, reflected_color, hit.material.transparency);
-            } else {
-                // Calculate refraction direction
-                t_vector refracted_dir = refract(ray.direction, hit.normal, eta_ratio);
-                t_ray refracted_ray = {hit.point, refracted_dir};
-                refracted_ray.origin = add(refracted_ray.origin, 
-                                           multiply_scalar(refracted_ray.direction, 0.001));
-                t_color refracted_color = trace_ray(refracted_ray, scene, depth + 1);
-                // Blend refraction with final color
-                final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
-            }
-        
-        }
-
+        t_color refracted_color = calculate_refraction(ray, &hit, scene, depth);
+        final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
     }
 
     return final_color;
 }
+
+
 
 double schlick_reflection_coefficient(double cos_theta, double refractive_index) {
     double r0 = pow((1 - refractive_index) / (1 + refractive_index), 2);

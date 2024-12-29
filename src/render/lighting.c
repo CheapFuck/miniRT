@@ -314,8 +314,8 @@ int is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder, double scal
     int v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius) / grid_size);
 
     // Debugging prints to inspect intermediate values
-    printf("height: %f, radial: (%f, %f, %f), angle: %f, normalized_angle: %f, u: %d, v: %d\n",
-           height, radial.x, radial.y, radial.z, angle, normalized_angle, u, v);
+    // printf("height: %f, radial: (%f, %f, %f), angle: %f, normalized_angle: %f, u: %d, v: %d\n",
+        //    height, radial.x, radial.y, radial.z, angle, normalized_angle, u, v);
 
     // Return alternating checkerboard pattern
     return (u + v) % 2;
@@ -399,12 +399,7 @@ int is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
     return (u + v) % 2;
 }
 
-t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, t_vector normal,  double scale)
-{
-    if (is_plane_checkerboard(point, normal, scale))
-        return color1;
-    return color2;
-}
+
 
 int is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
 {
@@ -430,11 +425,20 @@ int is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
     return (u + v) % 2;
 }
 
-t_color get_disc_checkerboard_color(t_vector point, t_disc *disc, t_color color1, t_color color2, double scale)
+t_color get_disc_checkerboard_color(t_hit_record *hit, t_disc *disc)
 {
-    if (is_disc_checkerboard(point, disc, scale))
-        return color1;
-    return color2;
+    t_color black = {0, 0, 0};
+    t_color white = {255, 255, 255};
+    double scale = 0.5;
+
+    t_vector local_point = subtract(hit->point, disc->center);
+    double u = fmod(fabs(local_point.x) * scale, 1.0);
+    double v = fmod(fabs(local_point.y) * scale, 1.0);
+
+    if (((int)(u * 10) % 2) == ((int)(v * 10) % 2))
+        return black;
+    else
+        return white;
 }
 
 

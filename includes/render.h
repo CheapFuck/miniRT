@@ -21,7 +21,9 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
 int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
 t_color get_checkerboard_color(t_vector point, t_cylinder *cylinder,
                                t_color color1, t_color color2, double scale);
-t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale);
+// t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder, t_color color1, t_color color2, double scale);
+t_color get_cylinder_checkerboard_color(t_hit_record *hit, t_cylinder *cylinder);
+
 int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
 // t_color get_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
 void render_next_row(void *param);
@@ -52,14 +54,29 @@ void parse_discs(char *line, t_scene *scene);
 void	parse_camera(char *line, t_scene *scene);
 t_color	combine_color(t_color light_color, t_color object_color);
 // t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, double scale);
-t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, t_vector normal,  double scale);
-t_color get_disc_checkerboard_color(t_vector point, t_disc *disc, t_color color1, t_color color2, double scale);
+// t_color get_plane_checkerboard_color(t_vector point, t_color color1, t_color color2, t_vector normal,  double scale);
+t_color get_plane_checkerboard_color(t_hit_record *hit, t_plane *plane);
+// t_color get_disc_checkerboard_color(t_vector point, t_disc *disc, t_color color1, t_color color2, double scale);
+t_color get_disc_checkerboard_color(t_hit_record *hit, t_disc *disc);
+
 int	validate_ratio(double value, const char *element_name);
 int	validate_color(t_color *color);
 int	validate_nrmlzd_vector(t_vector *vector, const char *element_name);
 int	validate_fov(int fov);
 int	validate_unique_element(t_scene *scene, char type);
 int	is_valid_number(const char *str);
+void check_intersections(t_ray ray, t_scene *scene, t_hit_record *hit);
+t_color handle_sphere_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+t_color handle_cylinder_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+t_color handle_plane_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+
+t_color handle_disc_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+t_color calculate_refraction(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+t_color calculate_reflection(t_ray ray, t_hit_record *hit, t_scene *scene, int depth);
+t_color get_sphere_checkerboard_color(t_hit_record *hit, t_sphere *sphere);
+
+
+
 
 
 

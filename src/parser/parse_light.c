@@ -71,6 +71,7 @@ void	parse_light(char *line, t_scene *scene)
 		ft_free_split(tokens);
 		exit_with_error("Invalid light format");
 	}
+    
 	scene->lights[scene->num_lights].pos.x = 0.0;
 	scene->lights[scene->num_lights].pos.y = 0.0;
 	scene->lights[scene->num_lights].pos.z = 0.0;
