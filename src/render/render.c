@@ -450,6 +450,16 @@ t_color handle_sphere_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int dept
     t_sphere *sphere = &scene->spheres[hit->index];
     t_vector normal = normalize(subtract(hit->point, sphere->center));
 
+
+
+//                 // reflectivity = sphere->material.reflectivity;
+//                 // transparency = sphere->material.transparency;
+//                 // refractive_index = sphere->material.refractive_index;
+
+                hit->material.reflectivity = sphere->material.reflectivity;
+                hit->material.transparency = sphere->material.transparency;
+                hit->material.refractive_index = sphere->material.refractive_index;
+
     if (sphere->material.checker)
         return apply_lighting(hit->point, normal, get_sphere_checkerboard_color(hit, sphere), scene, depth + 1);
     else
@@ -457,6 +467,7 @@ t_color handle_sphere_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int dept
 }
 t_color handle_cylinder_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
 {
+
     t_cylinder *cylinder = &scene->cylinders[hit->index];
     t_color black = {255, 0, 0};
     t_color white = {0, 0, 255};
@@ -465,6 +476,9 @@ t_color handle_cylinder_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int de
     t_vector axis_point = add(cylinder->center, multiply_scalar(cylinder->orientation, projection));
     t_vector normal = normalize(subtract(hit->point, axis_point));
 
+    hit->material.reflectivity = cylinder->material.reflectivity;
+    hit->material.transparency = cylinder->material.transparency;
+    hit->material.refractive_index = cylinder->material.refractive_index;
     if (cylinder->material.checker)
         return apply_lighting(hit->point, normal, get_cylinder_checkerboard_color(hit, cylinder), scene, depth + 1);
     else
@@ -515,7 +529,10 @@ t_color handle_plane_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth
 {
     t_plane *plane = &scene->planes[hit->index];
     t_vector normal = plane->normal;
-
+    
+    hit->material.reflectivity = plane->material.reflectivity;
+    hit->material.transparency = plane->material.transparency;
+    hit->material.refractive_index = plane->material.refractive_index;
     if (plane->material.checker)
         return apply_lighting(hit->point, normal, get_plane_checkerboard_color(hit, plane), scene, depth + 1);
     else
@@ -544,14 +561,13 @@ t_color handle_disc_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
     // Calculate grid coordinates
     int u = (int)floor(proj_x / grid_size);
     int v = (int)floor(proj_y / grid_size);
-
+    hit->material.reflectivity = disc->material.reflectivity;
+    hit->material.transparency = disc->material.transparency;
+    hit->material.refractive_index = disc->material.refractive_index;
     if((u + v) % 2)
         return black;
     return white;
 }
-
-
-
 
 t_color calculate_reflection(t_ray ray, t_hit_record *hit, t_scene *scene, int depth)
 {
@@ -660,7 +676,9 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 
     if (hit.material.transparency > 0.0)
     {
+        // printf("lala\n");
         t_color refracted_color = calculate_refraction(ray, &hit, scene, depth);
+        // final_color = combine_color(final_color, refracted_color);
         final_color = blend_colors(final_color, refracted_color, hit.material.transparency);
     }
 
