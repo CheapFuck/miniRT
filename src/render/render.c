@@ -529,7 +529,8 @@ t_color handle_plane_hit(t_ray ray, t_hit_record *hit, t_scene *scene, int depth
 {
     t_plane *plane = &scene->planes[hit->index];
     t_vector normal = plane->normal;
-    
+    if (dot(ray.direction, normal) > 0)
+        normal = multiply_scalar(normal, -1); // Flip the normal
     hit->material.reflectivity = plane->material.reflectivity;
     hit->material.transparency = plane->material.transparency;
     hit->material.refractive_index = plane->material.refractive_index;
