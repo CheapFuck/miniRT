@@ -234,6 +234,34 @@ while (i < num_samples) {
 //     return (u + v) % 2;
 // }
 
+// int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale) {
+//     if (cylinder == NULL || fabs(dot((t_vector){0, 1, 0}, cylinder->orientation)) > 0.99) {
+//         // Check if cylinder or orientation is uninitialized
+//         // printf("Error: Cylinder or orientation not initialized.\n");
+//         return 0;
+//     }
+
+//     if (fabs(dot((t_vector){0, 1, 0}, cylinder->orientation)) > 0.99) {
+//         // Vertical cylinder
+//         int result = is_checkerboard_vertical(point, cylinder, scale);
+//         if (result != 0 && result != 1) {
+//             printf("Warning: Unexpected result from is_checkerboard_vertical: %d\n", result);
+//             return 0;  // Default value
+//         }
+//         return result;
+//     } else {
+//         // Horizontal cylinder
+//         int result = is_checkerboard_horizontal(point, cylinder, scale);
+//         if (result != 0 && result != 1) {
+//             printf("Warning: Unexpected result from is_checkerboard_horizontal: %d\n", result);
+//             return 0;  // Default value
+//         }
+//         return result;
+//     }
+// }
+
+
+
 int is_checkerboard(t_vector point, t_cylinder *cylinder, double scale) {
     if (fabs(dot((t_vector){0, 1, 0}, cylinder->orientation)) > 0.99) {
         // Vertical cylinder
@@ -260,13 +288,12 @@ int is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder, double scal
     height = dot(local_point, cylinder->orientation);
 
     // Remove the height component to get the point on the cylinder's "circle"
-    t_vector radial = subtract(local_point,
-                        multiply_scalar(cylinder->orientation, height));
+    t_vector radial = subtract(local_point, multiply_scalar(cylinder->orientation, height));
 
     // Handle vertical cylinders properly
     t_vector up = {0, 1, 0}; // Arbitrary "up" vector
-    if (fabs(dot(up, cylinder->orientation)) > 0.99)
-        up = (t_vector){1, 0, 0}; // Switch "up" vector for vertical alignment
+    if (fabs(dot(up, cylinder->orientation)) < 0.01)
+        up = (t_vector){1, 0, 0}; // Switch "up" vector for nearly horizontal alignment
 
     // Create orthonormal basis perpendicular to cylinder's orientation
     t_vector x_axis = normalize(cross(up, cylinder->orientation));
@@ -285,6 +312,10 @@ int is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder, double scal
     // Scale height and angle into grid coordinates
     int u = (int)floor(height / grid_size);
     int v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius) / grid_size);
+
+    // Debugging prints to inspect intermediate values
+    printf("height: %f, radial: (%f, %f, %f), angle: %f, normalized_angle: %f, u: %d, v: %d\n",
+           height, radial.x, radial.y, radial.z, angle, normalized_angle, u, v);
 
     // Return alternating checkerboard pattern
     return (u + v) % 2;

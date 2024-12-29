@@ -170,6 +170,7 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 while (i < scene->num_spheres)
 {
     double t_sphere;
+    t_sphere = DBL_MAX;
     ray.direction = normalize(ray.direction);
     if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
     {
@@ -186,6 +187,7 @@ i = 0;
 while (i < scene->num_cylinders)
 {
     double t_cy;
+    t_cy = DBL_MAX;
     if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
     {
         hit.hit = 1;
@@ -199,6 +201,7 @@ i = 0;
 while (i < scene->num_discs)
 {
     double t_disc;
+    t_disc = DBL_MAX;
     if (intersect_disc(&ray, &scene->discs[i], &t_disc) && t_disc < hit.t)
     {
         hit.hit = 1;
@@ -215,6 +218,7 @@ i = 0;
 while (i < scene->num_planes)
 {
     double t_plane;
+    t_plane = DBL_MAX;
     if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
     {
         hit.hit = 1;
@@ -282,6 +286,7 @@ while (i < scene->num_planes)
                     // t_color object_color = get_checkerboard_color(hit.point, &scene->cylinders[i], black, white, .5);
                     // t_color     object_color = get_cylinder_checkerboard_color(hit.point, &scene->cylinders[i], black, white, 10);
                     int is_black = is_checkerboard(hit.point, cylinder, 0.5); // Scale = 1.0 for fine squares
+                    
                     t_color object_color = is_black ? black : white;
                     final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
                     // final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);

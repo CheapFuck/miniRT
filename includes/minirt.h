@@ -8,6 +8,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <fcntl.h>
+# include <float.h>
 # include "scene.h"
 # include "objects.h"
 # include "parser.h"
