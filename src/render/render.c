@@ -151,6 +151,7 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     t_hit_record hit;
     hit.t = INFINITY;
     hit.hit = 0;
+    hit.hit_from_inside = 0;
     // t_color light_contribution = {0, 0, 0};
     // double t = INFINITY;
     // int hit = 0;
@@ -320,8 +321,8 @@ while (i < scene->num_planes)
             case DISC:
             {
                 // printf("doe ik dit?\n");
-                double t;
-               	t = INFINITY;
+                // double t;
+               	// t = INFINITY;
                 t_disc *disc = &scene->discs[hit.index];
                 normal = disc->normal;
         			// normal = normalize(subtract(hit_point, scene->discs[i].center));

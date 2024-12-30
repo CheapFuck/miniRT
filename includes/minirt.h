@@ -18,7 +18,7 @@
 
 #define WIDTH  640
 #define HEIGHT 480
-#define NUM_THREADS 2
+#define NUM_THREADS 1
 
 void    render_scene(mlx_t *mlx, t_scene *scene);
 void    exit_with_error(const char *msg);

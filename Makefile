@@ -1,6 +1,6 @@
 NAME = miniRT
 CC 			 = cc
-CFLAGS 	     = -Wall -Wextra -pedantic -O2 -ffast-math -I./includes -I./MLX42/include -I./MLX/include/lodepng/lodepng.h
+CFLAGS 	     = -Wall -Wextra -Wextra -pedantic -Ofast -I./includes -I./MLX42/include -I./MLX/include/lodepng/lodepng.h
 # CFLAGS 	     = -g3 -fsanitize=address -I./includes -I./MLX42/include -I./MLX/include/lodepng/lodepng.h
 MLX_FLAGS 	 = -L./MLX42/build -lmlx42 -ldl -lglfw -pthread -lm
 LIBFTDIR 	:=	libft/
@@ -16,7 +16,6 @@ SRC = src/main.c \
 	  src/parser/parse_camera.c \
 	  src/parser/parse_file.c \
 	  src/parser/parse_light.c \
-	  src/parser/parse_objects.c \
   	  src/parser/parse_plane.c \
 	  src/parser/parse_cylinder.c \
   	  src/parser/parse_sphere.c \
