@@ -151,13 +151,13 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
     t_hit_record hit;
     hit.t = INFINITY;
     hit.hit = 0;
-    t_color light_contribution = {0, 0, 0};
+    // t_color light_contribution = {0, 0, 0};
     // double t = INFINITY;
     // int hit = 0;
     t_color final_color = {0, 0, 0};
-    double reflectivity = 0.0;
-    double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
-    double refractive_index = 0.0;
+    // double reflectivity = 0.0;
+    // double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
+    // double refractive_index = 0.0;
     t_vector normal;
     t_color black = {255, 0, 0};
     t_color white = {0, 0, 255};
@@ -326,7 +326,7 @@ while (i < scene->num_planes)
                 normal = disc->normal;
         			// normal = normalize(subtract(hit_point, scene->discs[i].center));
 
-                	t_color single;
+                	// t_color single;
 	        t_color gradient;
             // hit.point = add(ray.origin, multiply_scalar(ray.direction, t));
             // normal = disc->normal;
@@ -371,7 +371,7 @@ while (i < scene->num_planes)
         
         if (hit.material.reflectivity > 0.0)
         {
-            double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
+            // double cos_theta = fmax(dot(normal, multiply_scalar(ray.direction, -1.0)), 0.0);
             // double reflection_coefficient = schlick_reflection_coefficient(cos_theta, hit.material.refractive_index);
             t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);
             reflection_ray.origin = add(reflection_ray.origin,
@@ -418,12 +418,12 @@ double schlick_reflection_coefficient(double cos_theta, double refractive_index)
 // New function to handle rendering in threads
 void *render_thread(void *arg)
 {
-    double reflectivity = 0.0;
+    // double reflectivity = 0.0;
     t_thread_data *thread_data = (t_thread_data *)arg;
     t_render_data *data = thread_data->render_data;
-    t_color black = {0, 0, 0};
-    t_color white = {255, 255, 255};
-    t_vector hit_point, normal;
+    // t_color black = {0, 0, 0};
+    // t_color white = {255, 255, 255};
+    // t_vector normal;
 	// pthread_detach(pthread_self());
     int x;
     int y;
@@ -438,7 +438,7 @@ while (y < HEIGHT) {
         {
             t_ray ray = create_ray(x, y, &data->scene->camera);
             t_color final_color = trace_ray(ray, data->scene, 5);
-            double t;
+            // double t;
             uint32_t color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
             pthread_mutex_lock(&data->mutex);
             mlx_put_pixel(data->img, x, y, color);
@@ -599,7 +599,7 @@ void render_scene(mlx_t *mlx, t_scene *scene)
     // Create threads
     const int num_threads = NUM_THREADS;  // Consider making this a #define NUM_THREADS
     pthread_t threads[num_threads];
-    int rows_per_thread = HEIGHT / num_threads;
+    // int rows_per_thread = HEIGHT / num_threads;
     i = 0;
     while (i < num_threads)
 {

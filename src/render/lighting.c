@@ -18,7 +18,7 @@ double compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene, 
 {
     int unblocked_rays = 0;
     int i;
-    int j;
+    // int j;
 
  i = 0;
 while (i < num_samples) {
@@ -328,7 +328,7 @@ int is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
         angle += 2 * M_PI;
 
     // Circumference-based scaling to match height grid
-    double circumference = 2 * M_PI * cylinder->radius;
+    // double circumference = 2 * M_PI * cylinder->radius;
     double scaled_angle = angle * (cylinder->radius / grid_size);
 
     // Scale height into grid coordinates

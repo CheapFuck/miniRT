@@ -209,8 +209,10 @@ void parse_discs(char *line, t_scene *scene)
     disc.radius = disc.diameter / 2.0;
     disc.height = ft_atof(tokens[4]);
     if (!parse_color(tokens[5], &disc.color))
-		return (handle_parse_error(tokens,
-				"Error: Invalid disc color format"));
+    {
+        handle_parse_error(tokens, "Error: Invalid disc color format");
+		return ;
+    }
     t_disc bottom_disc;
     t_vector bottom_offset = multiply_scalar(disc.orientation, -0.5 * disc.height);
     bottom_disc.center = add(disc.center, bottom_offset);
