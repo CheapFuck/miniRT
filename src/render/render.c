@@ -143,47 +143,35 @@ int is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 // Modified color calculation function with reflection support
 t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 {
+    t_hit_record hit;
+
     if (depth > MAX_REFLECTION_DEPTH)
         return ((t_color){0, 0, 0});
+    t_color final_color = {0, 0, 0};
+    t_vector normal;
+    t_color black = {255, 255, 255};
+    t_color white = {0, 0, 0};
+    int i;
 
-
-
-    t_hit_record hit;
+    hit.index = -1;
     hit.t = INFINITY;
     hit.hit = 0;
     hit.hit_from_inside = 0;
-    // t_color light_contribution = {0, 0, 0};
-    // double t = INFINITY;
-    // int hit = 0;
-    t_color final_color = {0, 0, 0};
-    // double reflectivity = 0.0;
-    // double transparency = 0.0;      // 0.0 (opaque) to 1.0 (fully transparent)
-    // double refractive_index = 0.0;
-    t_vector normal;
-    t_color black = {255, 0, 0};
-    t_color white = {0, 0, 255};
-    int i;
-    // t_object_type hit_type;
-    hit.index = -1;
-
-    // Check sphere intersections
    i = 0;
-while (i < scene->num_spheres)
-{
-    double t_sphere;
-    ray.direction = normalize(ray.direction);
-    if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
+    while (i < scene->num_spheres)
     {
-        hit.hit = 1;
-        hit.t = t_sphere;
-        hit.type = SPHERE;
-        hit.index = i;
+        double t_sphere;
+        ray.direction = normalize(ray.direction);
+        if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
+        {
+            hit.hit = 1;
+            hit.t = t_sphere;
+            hit.type = SPHERE;
+            hit.index = i;
+        }
+        i++;
     }
-    i++;
-}
-
-    // Check cylinder intersections
-i = 0;
+    i = 0;
 while (i < scene->num_cylinders)
 {
     double t_cy;
