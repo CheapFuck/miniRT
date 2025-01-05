@@ -501,6 +501,7 @@ while (i < scene->num_lights) {
     i++;
 }
 
+
     // Combine light contribution with object color
     return combine_color(light_contribution, object_color);
 }
