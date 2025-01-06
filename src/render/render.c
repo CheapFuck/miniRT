@@ -505,7 +505,25 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
                 final_color = apply_lighting(hit.point, normal, plane->material.color, scene, depth + 1);
             hit.material = plane->material;
         }
-        
+        else if (hit.type == DISC)
+{
+    t_disc *disc = &scene->discs[hit.index];
+    normal = disc->normal;
+    if (dot(ray.direction, normal) > 0)
+        normal = multiply_scalar(normal, -1);
+    
+    if (disc->material.checker == 1)
+    {
+        t_color object_color = get_disc_checkerboard_color(hit.point, disc, black, white, 0.5);
+        final_color = apply_lighting(hit.point, normal, object_color, scene, depth + 1);
+    }
+    else
+    {
+        final_color = apply_lighting(hit.point, normal, disc->material.color, scene, depth + 1);
+    }
+    hit.material = disc->material;
+}
+
         if (hit.material.reflectivity > 0.0 || hit.material.transparency > 0.0)
         {
             t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);

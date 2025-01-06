@@ -72,6 +72,9 @@ typedef struct s_scene {
    	int			num_cylinders;
    	int			num_discs;
     int num_lights;
+    	int			has_ambient;
+	int			has_camera;
+	int			has_light;
 } t_scene;
 
 

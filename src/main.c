@@ -5,7 +5,17 @@
 //     if (mlx) mlx_terminate(mlx);
 //     exit(0);
 // }
-
+static void	init_scene(t_scene *scene)
+{
+	scene->num_spheres = 0;
+	scene->num_cylinders = 0;
+	scene->num_lights = 0;
+	scene->num_planes = 0;
+	scene->num_discs = 0;
+	scene->has_ambient = 0;
+	scene->has_camera = 0;
+	scene->has_light = 0;
+}
 
 void ft_hook(void* param)
 {
@@ -38,6 +48,7 @@ int main(int argc, char **argv)
     scene.num_cylinders = 0;
     scene.num_planes = 0;
     // scene.spheres->shininess = 1000;
+	init_scene(&scene);
 
     parse_file(argv[1], &scene);
    	mlx_loop_hook(mlx, ft_hook, mlx);

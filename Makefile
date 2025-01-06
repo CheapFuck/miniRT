@@ -21,6 +21,7 @@ SRC = src/main.c \
   	  src/parser/parse_sphere.c \
 	  src/render/safe2file.c \
 	  MLX42/lib/png/lodepng.c \
+	  src/parser/parser_utils.c \
 
 OBJ = $(SRC:.c=.o)
 
