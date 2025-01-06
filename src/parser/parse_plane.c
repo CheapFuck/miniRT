@@ -150,7 +150,7 @@ void	parse_plane(char *line, t_scene *scene)
 	t_plane	plane;
 
 	tokens = ft_split(line, ' ');
-	if (!tokens || ft_arraylen(tokens) != 6)
+	if (!tokens || ft_arraylen(tokens) != 8)
 		handle_plane_parse_error(tokens, NULL, "Invalid plane format");
 	if (!parse_plane_tokens(tokens[1], &plane.point))
 		handle_plane_parse_error(tokens, NULL, "Invalid plane point format");
