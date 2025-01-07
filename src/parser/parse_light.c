@@ -1,6 +1,5 @@
 #include "../../includes/minirt.h"
 
-
 int	parse_light_position(char **tokens, t_light *light)
 {
 	char	**pos;

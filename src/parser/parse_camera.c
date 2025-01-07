@@ -45,7 +45,6 @@ static void	validate_camera_orientation(t_scene *scene, char *line)
 		ft_free_split(tokens);
 		exit_with_error("FOV must be between 0 and 180 degrees");
 	}
-	printf("Camera FOV: %f\n", scene->camera.fov);
 	scene->has_camera = 1;
 	ft_free_split(tokens);
 }
