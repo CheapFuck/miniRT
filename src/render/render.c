@@ -184,7 +184,18 @@ static t_ray	get_refraction_ray(t_vector point, t_vector normal, t_ray incoming_
     }
     return (refraction_ray);
 }
-
+static t_hit_record init_hit_record(t_hit_record *record)
+{
+    record->point =(t_vector){0 , 0, 0};
+	record->normal =(t_vector){0 , 0, 0};
+	record->t = 0.0;
+	record->color = (t_color){0,0,0};
+	record->material = (t_material){0.0, 0.0, 0.0, (t_color){0,0,0}, 0};
+	record->hit = 0;
+	record->index = 0;
+	record->type = (t_object_type)NULL;
+	record->hit_from_inside = 0;
+}
 t_color	trace_ray(t_ray ray, t_scene *scene)
 {
     t_hit_record	hit;
@@ -194,6 +205,7 @@ t_color	trace_ray(t_ray ray, t_scene *scene)
 	t_color			white;
 	int				i;
 
+    init_hit_record(&hit);
     if (5 > MAX_REFLECTION_DEPTH)
         return ((t_color){0, 0, 0});
     final_color = (t_color){0, 0, 0};

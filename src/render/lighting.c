@@ -99,42 +99,71 @@ int	is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder,
 	return ((u + v) % 2);
 }
 
+
 int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
 {
-	t_vector	local_point;
-	double		height;
-	double		angle;
-	double		grid_size;
-	t_vector	radial;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	double		scaled_angle;
-	int			u;
-	int			v;
+	static double 	array[6];
+	static t_vector	vectors[6];
+	int				u;
+	int				v;
 
-	grid_size = scale;
-	local_point = subtract(point, cylinder->center);
-	height = dot(local_point, cylinder->orientation);
-	radial = subtract(local_point, multiply_scalar(cylinder->orientation,
-				height));
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, cylinder->orientation)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, cylinder->orientation));
-	y_axis = normalize(cross(cylinder->orientation, x_axis));
-	proj_x = dot(radial, x_axis);
-	proj_y = dot(radial, y_axis);
-	angle = atan2(proj_y, proj_x);
-	if (angle < 0)
-		angle += 2 * M_PI;
-	scaled_angle = angle * (cylinder->radius / grid_size);
-	u = (int)floor(height / grid_size);
-	v = (int)floor(scaled_angle);
+	array[2] = scale;
+	vectors[5] = subtract(point, cylinder->center);
+	array[0] = dot(vectors[5], cylinder->orientation);
+	vectors[0] = subtract(vectors[5], multiply_scalar(cylinder->orientation,
+				array[0]));
+	vectors[1] = (t_vector){0, 1, 0};
+	if (fabs(dot(vectors[1], cylinder->orientation)) > 0.99)
+		vectors[1] = (t_vector){1, 0, 0};
+	vectors[2] = normalize(cross(vectors[1], cylinder->orientation));
+	vectors[3] = normalize(cross(cylinder->orientation, vectors[2]));
+	array[3] = dot(vectors[0], vectors[2]);
+	array[4] = dot(vectors[0], vectors[2]);
+	array[1] = atan2(array[4], array[3]);
+	if (array[1] < 0)
+		array[1] += 2 * M_PI;
+	array[5] = array[1] * (cylinder->radius / array[1]);
+	u = (int)floor(array[0] / array[1]);
+	v = (int)floor(array[5]);
 	return (((u + v) % 2));
 }
+
+// int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
+// {
+// 	t_vector	local_point;
+// 	double		height;
+// 	double		angle;
+// 	double		grid_size;
+// 	t_vector	radial;
+// 	t_vector	up;
+// 	t_vector	x_axis;
+// 	t_vector	y_axis;
+// 	double		proj_x;
+// 	double		proj_y;
+// 	double		scaled_angle;
+// 	int			u;
+// 	int			v;
+
+// 	grid_size = scale;
+// 	local_point = subtract(point, cylinder->center);
+// 	height = dot(local_point, cylinder->orientation);
+// 	radial = subtract(local_point, multiply_scalar(cylinder->orientation,
+// 				height));
+// 	up = (t_vector){0, 1, 0};
+// 	if (fabs(dot(up, cylinder->orientation)) > 0.99)
+// 		up = (t_vector){1, 0, 0};
+// 	x_axis = normalize(cross(up, cylinder->orientation));
+// 	y_axis = normalize(cross(cylinder->orientation, x_axis));
+// 	proj_x = dot(radial, x_axis);
+// 	proj_y = dot(radial, y_axis);
+// 	angle = atan2(proj_y, proj_x);
+// 	if (angle < 0)
+// 		angle += 2 * M_PI;
+// 	scaled_angle = angle * (cylinder->radius / grid_size);
+// 	u = (int)floor(height / grid_size);
+// 	v = (int)floor(scaled_angle);
+// 	return (((u + v) % 2));
+// }
 
 int	is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
 {
@@ -207,7 +236,50 @@ t_color	get_checkerboard_color(t_vector point, t_cylinder *cylinder,
 		return (color1);
 	return (color2);
 }
+static int intersect_sphere_helper(t_scene *scene, t_ray shadow_ray, double t_shadow, double light_distance)
+{
+	int i;
 
+	i = 0;
+	while (i < scene->num_spheres)
+	{
+		if (intersect_sphere(&shadow_ray, &scene->spheres[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+static int intersect_cylinder_helper(t_scene *scene, t_ray shadow_ray, double t_shadow, double light_distance)
+{
+	int i;
+
+	i = 0;
+	while (i < scene->num_cylinders)
+	{
+		if (intersect_cylinder(&shadow_ray, &scene->cylinders[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+static int intersect_plane_helper(t_scene *scene, t_ray shadow_ray, double t_shadow, double light_distance)
+{
+	int i;
+
+	i = 0;
+	while (i < scene->num_cylinders)
+	{
+		if (intersect_plane(&shadow_ray, &scene->planes[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
 int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 {
 	int			i;
@@ -221,30 +293,12 @@ int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 				subtract(light.pos, hit_point)));
 	shadow_ray.origin = add(hit_point, multiply_scalar(light_dir, 1e-4));
 	shadow_ray.direction = light_dir;
-	i = 0;
-	while (i < scene->num_spheres)
-	{
-		if (intersect_sphere(&shadow_ray, &scene->spheres[i], &t_shadow)
-			&& t_shadow < light_distance)
-			return (1);
-		i++;
-	}
-	i = 0;
-	while (i < scene->num_cylinders)
-	{
-		if (intersect_cylinder(&shadow_ray, &scene->cylinders[i], &t_shadow)
-			&& t_shadow < light_distance)
-			return (1);
-		i++;
-	}
-	i = 0;
-	while (i < scene->num_planes)
-	{
-		if (intersect_plane(&shadow_ray, &scene->planes[i], &t_shadow)
-			&& t_shadow < light_distance)
-			return (1);
-		i++;
-	}
+	if(intersect_sphere_helper(scene, shadow_ray, t_shadow, light_distance))
+		return(1);
+	if(intersect_cylinder_helper(scene, shadow_ray, t_shadow, light_distance))
+		return(1);
+	if(intersect_plane_helper(scene, shadow_ray, t_shadow, light_distance))
+		return(1);
 	return (0);
 }
 
