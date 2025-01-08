@@ -11,12 +11,11 @@
 # include "scene.h"
 # include "objects.h"
 # include "parser.h"
-# include "utils.h"
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
 
-# define WIDTH          1280
-# define HEIGHT         1024
+# define WIDTH          640
+# define HEIGHT         480
 # define NUM_THREADS    1
 
 void	render_scene(mlx_t *mlx, t_scene *scene);
