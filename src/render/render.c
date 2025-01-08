@@ -2,28 +2,6 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-typedef struct s_render_data {
-    mlx_t *mlx;
-    mlx_image_t *img;
-    t_scene *scene;
-    int threads_completed;
-    int rendering_finished;
-    pthread_mutex_t mutex;
-    int current_row;
-    int render_complete;
-    struct timeval start_time;
-    struct timeval end_time;
-} t_render_data;
-
-typedef struct s_thread_data {
-    t_render_data *render_data;
-    int start_row;
-    int end_row;
-    int thread_id;
-    int num_threads;
-} t_thread_data;
-
-
 t_ray get_reflection_ray(t_vector hit_point, t_vector normal, t_ray incident_ray)
 {
     t_ray reflection;
@@ -58,7 +36,6 @@ t_color blend_colors(t_color original_color, t_color reflected_color, float refl
         .b = reflectivity * reflected_color.b + (1 - reflectivity) * original_color.b
     });
 }
-
 
 t_vector refract(t_vector incident, t_vector normal, float eta_ratio)
 {
@@ -120,70 +97,76 @@ t_color get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder,
 
 int	is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 {
-    t_vector	local_point;
-    double		height;
-	t_vector	projection;
-	t_vector	radial_vector;
-	double		angle;
-	double		u;
-	double		v;
-	double		scaled_u;
-	double		scaled_v;
+    t_vector    vectors[4];
+    double      doubles[6];
 	int			u_check;
 	int			v_check;
 
-	local_point = subtract(point, cylinder->center);
-    height = dot(local_point, cylinder->orientation);
-    projection = multiply_scalar(cylinder->orientation, height);
-	radial_vector = subtract(local_point, projection);
-    angle = atan2(radial_vector.z, radial_vector.x);
-	u = (angle / (2.0 * M_PI)) + 0.5;
-	v = (height + (cylinder->height / 2.0)) / cylinder->height;
-    scaled_u = u * scale;
-    scaled_v = v * scale;
-    u_check = (int)floor(scaled_u) % 2;
-    v_check = (int)floor(scaled_v) % 2;
+	vectors[0] = subtract(point, cylinder->center);
+    doubles[0] = dot(vectors[0], cylinder->orientation);
+    vectors[1] = multiply_scalar(cylinder->orientation, doubles[0]);
+	vectors[2] = subtract(vectors[0], vectors[1]);
+    doubles[1] = atan2(vectors[2].z, vectors[2].x);
+	doubles[2] = (doubles[1] / (2.0 * M_PI)) + 0.5;
+	doubles[3] = (doubles[0] + (cylinder->height / 2.0)) / cylinder->height;
+    doubles[4] = doubles[2] * scale;
+    doubles[5] = doubles[3] * scale;
+    u_check = (int)floor(doubles[4]) % 2;
+    v_check = (int)floor(doubles[5]) % 2;
     return ((u_check + v_check) % 2);
 }
 
-static t_ray	get_refraction_ray(t_vector point, t_vector normal, t_ray incoming_ray, double refractive_index)
+static void	adjust_refraction_params(t_vector *normal, double *cos_i, double *eta_i, double *eta_t)
 {
-    t_ray		refraction_ray;
+	double temp;
+
+	if (*cos_i < 0)
+	{
+		*cos_i = -*cos_i;
+		temp = *eta_i;
+		*eta_i = *eta_t;
+		*eta_t = temp;
+		*normal = multiply_scalar(*normal, -1);
+	}
+}
+
+static t_vector	calculate_refracted_dir(t_vector incoming_dir, t_vector normal, double eta, double cos_i, double k)
+{
+	return (add(multiply_scalar(incoming_dir, eta),
+			multiply_scalar(normal, (eta * cos_i - sqrt(k)))));
+}
+
+static t_ray	create_refraction_ray(t_vector point, t_vector direction)
+{
+	t_ray ray;
+
+	ray.origin = point;
+	ray.direction = normalize(direction);
+	return (ray);
+}
+
+t_ray	get_refraction_ray(t_vector point, t_vector normal, t_ray incoming_ray, double refractive_index)
+{
 	double		cos_i;
 	double		eta_i;
 	double		eta_t;
-	double		temp;
 	double		eta;
 	double		k;
 	t_vector	refracted_dir;
 
 	cos_i = -dot(normal, incoming_ray.direction);
-    eta_i = 1.0;
-    eta_t = refractive_index;
-	if (cos_i < 0)
-    {
-        cos_i = -cos_i;
-        temp = eta_i;
-        eta_i = eta_t;
-        eta_t = temp;
-        normal = multiply_scalar(normal, -1);
-    }
-    eta = eta_i / eta_t;
-    k = 1 - eta * eta * (1 - cos_i * cos_i);
-    if (k < 0)
-    {
-        refraction_ray.origin = point;
-        refraction_ray.direction = reflect(incoming_ray.direction, normal);
-    }
-    else
-    {
-		refracted_dir = add(multiply_scalar(incoming_ray.direction, eta),
-            multiply_scalar(normal, (eta * cos_i - sqrt(k))));
-        refraction_ray.origin = point;
-        refraction_ray.direction = normalize(refracted_dir);
-    }
-    return (refraction_ray);
+	eta_i = 1.0;
+	eta_t = refractive_index;
+	adjust_refraction_params(&normal, &cos_i, &eta_i, &eta_t);
+	eta = eta_i / eta_t;
+	k = 1 - eta * eta * (1 - cos_i * cos_i);
+	if (k < 0)
+		return (create_refraction_ray(point, reflect(incoming_ray.direction, normal)));
+	refracted_dir = calculate_refracted_dir(incoming_ray.direction, normal, eta, cos_i, k);
+	return (create_refraction_ray(point, refracted_dir));
 }
+
+
 static void init_hit_record(t_hit_record *record)
 {
     record->point =(t_vector){0 , 0, 0};
@@ -196,143 +179,204 @@ static void init_hit_record(t_hit_record *record)
 	// record->type = (t_object_type)NULL;
 	record->hit_from_inside = 0;
 }
+
+void hit_processing(t_hit_record *hit, t_object_type type, double object, int i)
+{
+    hit->hit = 1;
+    hit->t = object;
+    hit->type = type;
+    hit->index = i;
+
+}
+
+static void loop_intersect_sphere(t_scene *scene, t_ray *ray, t_hit_record *hit)
+{
+    int i;
+
+    i = 0;
+    while (i < scene->num_spheres)
+    {
+        double sphere;
+        ray->direction = normalize(ray->direction);
+        if (intersect_sphere(ray, &scene->spheres[i], &sphere) && sphere < hit->t)
+            hit_processing(hit, SPHERE, sphere, i);
+        i++;
+    }
+}
+
+static void loop_intersect_cylinder(t_scene *scene, t_ray *ray, t_hit_record *hit)
+{
+    int i;
+
+    i = 0;
+    while (i < scene->num_cylinders)
+    {
+        double cylinder;
+        ray->direction = normalize(ray->direction);
+        if (intersect_cylinder(ray, &scene->cylinders[i], &cylinder) && cylinder < hit->t)
+            hit_processing(hit, CYLINDER, cylinder, i);
+        i++;
+    }
+}
+
+static void loop_intersect_disc(t_scene *scene, t_ray *ray, t_hit_record *hit)
+{
+    int i;
+
+    i = 0;
+    while (i < scene->num_discs)
+    {
+        double disc;
+        ray->direction = normalize(ray->direction);
+        if (intersect_disc(ray, &scene->discs[i], &disc) && disc < hit->t)
+            hit_processing(hit, DISC, disc, i);
+        i++;
+    }
+}
+
+static void loop_intersect_plane(t_scene *scene, t_ray *ray, t_hit_record *hit)
+{
+    int i;
+
+    i = 0;
+    while (i < scene->num_planes)
+    {
+        double plane;
+        ray->direction = normalize(ray->direction);
+        if (intersect_plane(ray, &scene->planes[i], &plane) && plane < hit->t)
+            hit_processing(hit, PLANE, plane, i);
+        i++;
+    }
+}
+static void	init_colors(t_color *final_color)
+{
+	*final_color = (t_color){0, 0, 0};
+}
+
+void	init_hit(t_hit_record *hit)
+{
+	hit->index = -1;
+	hit->t = INFINITY;
+	hit->hit = 0;
+	hit->hit_from_inside = 0;
+}
+static void	initialize_and_intersect(t_scene *scene, t_ray *ray,
+	t_color *final_color, t_hit_record *hit)
+{
+    init_hit_record(hit);
+	init_colors(final_color);
+	init_hit(hit);
+	loop_intersect_sphere(scene, ray, hit);
+	loop_intersect_cylinder(scene, ray, hit);
+	loop_intersect_disc(scene, ray, hit);
+	loop_intersect_plane(scene, ray, hit);
+}
+
+static t_color	process_sphere_hit(t_hit_record *hit, t_scene *scene, t_vector *normal)
+{
+    t_sphere	*sphere;
+	t_vector	local_point;
+	double		u;
+	double		v;
+	int			check_u;
+	int			check_v;
+	t_color		object_color;
+
+	sphere = &scene->spheres[hit->index];
+	*normal = normalize(subtract(hit->point, sphere->center));
+	hit->material = scene->spheres[hit->index].material;
+    if (sphere->material.checker == 1)
+	{
+		local_point = subtract(hit->point, sphere->center);
+		u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+		v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
+		check_u = (int)(u * 20.0) % 2;
+		check_v = (int)(v * 20.0) % 2;
+		object_color = (check_u == check_v) ? (t_color){0, 0, 0} : (t_color){255, 255, 255};
+		return (apply_lighting(hit->point, *normal, object_color, scene));
+	}
+	
+    return (apply_lighting(hit->point, *normal, sphere->material.color, scene));
+    
+}
+
+
+
+static t_color	process_cylinder_hit(t_hit_record *hit, t_scene *scene, t_vector *normal)
+{
+    t_cylinder *cylinder = &scene->cylinders[hit->index];
+    *normal = get_cylinder_normal(hit->point, cylinder);
+    hit->material = cylinder->material;
+    if (cylinder->material.checker == 1)
+    {
+        int is_black = is_checkerboard(hit->point, cylinder, 0.5);
+        t_color object_color = is_black ? (t_color){255, 255, 255} : (t_color){0, 0, 0};
+        return (apply_lighting(hit->point, *normal, object_color, scene));
+    }
+    else
+        return(apply_lighting(hit->point, *normal, cylinder->material.color, scene));
+    
+}
+
+static t_color	process_disc_hit(t_hit_record *hit, t_scene *scene, t_ray ray, t_vector *normal)
+{
+    t_disc *disc = &scene->discs[hit->index];
+    *normal = disc->normal;
+    hit->material = disc->material;
+    if (dot(ray.direction, *normal) > 0)
+        *normal = multiply_scalar(*normal, -1);
+    if (disc->material.checker == 1)
+    {
+        t_color object_color = get_disc_checkerboard_color(hit->point, disc, 0.5);
+        return(apply_lighting(hit->point, *normal, object_color, scene));
+    }
+    else
+        return(apply_lighting(hit->point, *normal, disc->material.color, scene));
+}
+
+
+static t_color	process_plane_hit(t_hit_record *hit, t_scene *scene, t_ray ray, t_vector *normal)
+{
+    t_plane *plane = &scene->planes[hit->index];
+    *normal = plane->normal;
+    hit->material = plane->material;
+    if (dot(ray.direction, *normal) > 0)
+        *normal = multiply_scalar(*normal, -1);
+    if (plane->material.checker == 1)
+    {
+        t_color object_color = get_plane_checkerboard_color(hit->point, *normal, 0.5);
+        return(apply_lighting(hit->point, *normal, object_color, scene));
+    }
+    else
+        return(apply_lighting(hit->point, *normal, plane->material.color, scene));
+    
+    
+}
+
+static t_color paint_object(t_hit_record *hit, t_scene *scene, t_ray ray, t_vector *normal)
+{
+       if (hit->type == SPHERE)
+            return( process_sphere_hit(hit, scene, normal));
+        else if (hit->type == CYLINDER)
+            return( process_cylinder_hit(hit, scene, normal));
+        else if (hit->type == PLANE)
+            return(process_plane_hit(hit, scene, ray, normal));
+        else if (hit->type == DISC)
+            return(process_disc_hit(hit, scene, ray, normal));
+}
+
 t_color	trace_ray(t_ray ray, t_scene *scene)
 {
     t_hit_record	hit;
 	t_color			final_color;
 	t_vector		normal;
-	t_color			black;
-	t_color			white;
-	int				i;
 
-    init_hit_record(&hit);
-    if (5 > MAX_REFLECTION_DEPTH)
-        return ((t_color){0, 0, 0});
-    final_color = (t_color){0, 0, 0};
-    black = (t_color){255, 255, 255};
-    white = (t_color){0, 0, 0};
-    i = 0;
-    hit.index = -1;
-    hit.t = INFINITY;
-    hit.hit = 0;
-    hit.hit_from_inside = 0;
-    while (i < scene->num_spheres)
-    {
-        double t_sphere;
-        ray.direction = normalize(ray.direction);
-        if (intersect_sphere(&ray, &scene->spheres[i], &t_sphere) && t_sphere < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_sphere;
-            hit.type = SPHERE;
-            hit.index = i;
-        }
-        i++;
-    }
-    i = 0;
-    while (i < scene->num_cylinders)
-    {
-        double t_cy;
-        if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cy) && t_cy < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_cy;
-            hit.type = CYLINDER;
-            hit.index = i;
-        }
-        i++;
-    }
-    i = 0;
-    while (i < scene->num_discs)
-    {
-        double t_disc;
-        if (intersect_disc(&ray, &scene->discs[i], &t_disc) && t_disc < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_disc;
-            hit.type = DISC;
-            hit.index = i;
-        }
-        i++;
-    }
-    i = 0;
-    while (i < scene->num_planes)
-    {
-        double t_plane;
-        if (intersect_plane(&ray, &scene->planes[i], &t_plane) && t_plane < hit.t)
-        {
-            hit.hit = 1;
-            hit.t = t_plane;
-            hit.type = PLANE;
-            hit.index = i;
-        }
-        i++;
-    }
+    normal = (t_vector){0,0,0,};
+    initialize_and_intersect(scene, &ray, &final_color, &hit);
     if (hit.hit)
     {
         hit.point = add(ray.origin, multiply_scalar(ray.direction, hit.t));
-        if (hit.type == SPHERE)
-        {
-            t_sphere *sphere = &scene->spheres[hit.index];
-            normal = normalize(subtract(hit.point, sphere->center));
-            if (sphere->material.checker == 1)
-            {
-                t_vector local_point = subtract(hit.point, sphere->center);
-                double u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-                double v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
-                int check_u = (int)(u * 20.0) % 2;
-                int check_v = (int)(v * 20.0) % 2;
-                t_color object_color = (check_u == check_v) ? white : black;
-                final_color = apply_lighting(hit.point, normal, object_color, scene);
-            }
-            else
-                final_color = apply_lighting(hit.point, normal, sphere->material.color, scene);
-            hit.material = sphere->material;
-        }
-        else if (hit.type == CYLINDER)
-        {
-            t_cylinder *cylinder = &scene->cylinders[hit.index];
-            normal = get_cylinder_normal(hit.point, cylinder);
-            if (cylinder->material.checker == 1)
-            {
-                int is_black = is_checkerboard(hit.point, cylinder, 0.5);
-                t_color object_color = is_black ? black : white;
-                final_color = apply_lighting(hit.point, normal, object_color, scene);
-            }
-            else
-                final_color = apply_lighting(hit.point, normal, cylinder->material.color, scene);
-            hit.material = cylinder->material;
-        }
-        else if (hit.type == PLANE)
-        {
-            t_plane *plane = &scene->planes[hit.index];
-            normal = plane->normal;
-            if (dot(ray.direction, normal) > 0)
-                normal = multiply_scalar(normal, -1);
-            if (plane->material.checker == 1)
-            {
-                t_color object_color = get_plane_checkerboard_color(hit.point, black, white, normal, 0.5);
-                final_color = apply_lighting(hit.point, normal, object_color, scene);
-            }
-            else
-                final_color = apply_lighting(hit.point, normal, plane->material.color, scene);
-            hit.material = plane->material;
-        }
-        else if (hit.type == DISC)
-    {
-    t_disc *disc = &scene->discs[hit.index];
-    normal = disc->normal;
-    if (dot(ray.direction, normal) > 0)
-        normal = multiply_scalar(normal, -1);
-    if (disc->material.checker == 1)
-    {
-        t_color object_color = get_disc_checkerboard_color(hit.point, disc, black, white, 0.5);
-        final_color = apply_lighting(hit.point, normal, object_color, scene);
-    }
-    else
-        final_color = apply_lighting(hit.point, normal, disc->material.color, scene);
-    hit.material = disc->material;
-    }
+        final_color = paint_object(&hit, scene, ray, &normal);
         if (hit.material.reflectivity > 0.0 || hit.material.transparency > 0.0)
         {
             t_ray reflection_ray = get_reflection_ray(hit.point, normal, ray);
@@ -354,58 +398,67 @@ double	schlick_reflection_coefficient(double cos_theta, double refractive_index)
     return r0 + (1 - r0) * pow((1 - cos_theta), 5);
 }
 
-void	*render_thread(void *arg)
+static void	process_pixel(int x, int y, t_render_data *data, int thread_id, int num_threads)
 {
-	t_thread_data *thread_data;
-    t_render_data *data;
-    int x;
-    int y;
-    int thread_id;
-    int num_threads;
-	int	pixel_index;
+	int		pixel_index;
 	t_ray	ray;
 	t_color	final_color;
 	uint32_t color;
-	double elapsed_time;
+
+	pixel_index = y * WIDTH + x;
+	if (pixel_index % num_threads == thread_id)
+	{
+		ray = create_ray(x, y, &data->scene->camera);
+		final_color = trace_ray(ray, data->scene);
+		color = (final_color.r << 24) | (final_color.g << 16) 
+				| (final_color.b << 8) | 0xFF;
+		pthread_mutex_lock(&data->mutex);
+		mlx_put_pixel(data->img, x, y, color);
+		pthread_mutex_unlock(&data->mutex);
+	}
+}
+
+static void	update_render_progress(t_render_data *data)
+{
+	double	elapsed_time;
+
+	pthread_mutex_lock(&data->mutex);
+	data->threads_completed++;
+	if (data->threads_completed == NUM_THREADS)
+	{
+		gettimeofday(&data->end_time, NULL);
+		elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + 
+					   (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
+		printf("Rendering took %f seconds\n", elapsed_time);
+		save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
+		data->rendering_finished = 1;
+	}
+	pthread_mutex_unlock(&data->mutex);
+}
+
+void	*render_thread(void *arg)
+{
+	t_thread_data	*thread_data;
+	t_render_data	*data;
+	int				x;
+	int				y;
 
 	thread_data = (t_thread_data *)arg;
 	data = thread_data->render_data;
-	thread_id = thread_data->thread_id;
-	num_threads = thread_data->num_threads;
 	y = 0;
-    while (y < HEIGHT)
-    {
-        x = 0;
-        while (x < WIDTH)
-        {
-            pixel_index = y * WIDTH + x;
-            if (pixel_index % num_threads == thread_id)
-            {
-                ray = create_ray(x, y, &data->scene->camera);
-                final_color = trace_ray(ray, data->scene);
-                color = (final_color.r << 24) | (final_color.g << 16) | (final_color.b << 8) | 0xFF;
-                pthread_mutex_lock(&data->mutex);
-                mlx_put_pixel(data->img, x, y, color);
-                pthread_mutex_unlock(&data->mutex);
-            }
-            x++;
-        }
-        y++;
-    }
-    pthread_mutex_lock(&data->mutex);
-    data->threads_completed++;
-    if (data->threads_completed == NUM_THREADS)
-    {
-        gettimeofday(&data->end_time, NULL);
-        elapsed_time = (data->end_time.tv_sec - data->start_time.tv_sec) + 
-                            (data->end_time.tv_usec - data->start_time.tv_usec) / 1e6;
-        printf("Rendering took %f seconds\n", elapsed_time);
-        save_image_to_file(data->img->pixels, WIDTH, HEIGHT, "output.png");
-        data->rendering_finished = 1;
-    }
-    pthread_mutex_unlock(&data->mutex);
-    free(thread_data);
-    return (NULL);
+	while (y < HEIGHT)
+	{
+		x = 0;
+		while (x < WIDTH)
+		{
+			process_pixel(x, y, data, thread_data->thread_id, thread_data->num_threads);
+			x++;
+		}
+		y++;
+	}
+	update_render_progress(data);
+	free(thread_data);
+	return (NULL);
 }
 
 

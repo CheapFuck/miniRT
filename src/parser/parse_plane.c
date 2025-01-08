@@ -76,7 +76,7 @@ void	parse_plane(char *line, t_scene *scene)
 	if (!parse_plane_color(tokens[3], &plane.material.color, tokens))
 		return ;
 	if (!validate_color(&plane.material.color))
-		return ((void)ft_free_split(tokens));
+		return (ft_free_split(tokens));
 	plane.material.checker = ft_atoi(tokens[4]);
 	plane.material.reflectivity = ft_atof(tokens[5]);
 	if (scene->num_planes >= 65536)
