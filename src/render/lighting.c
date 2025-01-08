@@ -282,12 +282,12 @@ static int intersect_plane_helper(t_scene *scene, t_ray shadow_ray, double t_sha
 }
 int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 {
-	int			i;
 	t_vector	light_dir;
 	double		light_distance;
 	t_ray		shadow_ray;
 	double		t_shadow;
 
+	t_shadow = 0.0;
 	light_dir = normalize(subtract(light.pos, hit_point));
 	light_distance = sqrt(dot(subtract(light.pos, hit_point),
 				subtract(light.pos, hit_point)));

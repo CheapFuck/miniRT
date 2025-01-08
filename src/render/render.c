@@ -184,7 +184,7 @@ static t_ray	get_refraction_ray(t_vector point, t_vector normal, t_ray incoming_
     }
     return (refraction_ray);
 }
-static t_hit_record init_hit_record(t_hit_record *record)
+static void init_hit_record(t_hit_record *record)
 {
     record->point =(t_vector){0 , 0, 0};
 	record->normal =(t_vector){0 , 0, 0};
