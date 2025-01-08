@@ -17,14 +17,19 @@ int			is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
 t_vector	random_point_on_light(t_light light);
 double		compute_shadow_factor(t_vector hit_point, t_light light,
 				t_scene *scene, int num_samples);
-int			is_checkerboard(t_vector point, t_cylinder *cylinder,
-				double scale);
+// int	is_checkerboard(t_vector point, t_cylinder *cylinder, double scale, int mode);
+int	is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
+int	is_checkerboard_xy(t_vector point, t_cylinder *cylinder, double scale, int mode);
+
+// int			is_checkerboard(t_vector point, t_cylinder *cylinder,
+// 				double scale);
 t_color		get_checkerboard_color(t_vector point, t_cylinder *cylinder,
 				t_color color1, t_color color2, double scale);
 t_color		get_cylinder_checkerboard_color(t_vector point,
 				t_cylinder *cylinder, t_color color1, t_color color2, double scale);
 int			is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder,
 				double scale);
+				
 void		render_next_row(void *param);
 t_vector	cross(t_vector a, t_vector b);
 int			is_checkerboard_vertical(t_vector point, t_cylinder *cylinder,

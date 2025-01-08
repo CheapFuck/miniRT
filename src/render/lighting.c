@@ -60,73 +60,73 @@ double	compute_shadow_factor(t_vector hit_point, t_light light, t_scene *scene,
 int	is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 {
 	if (fabs(dot((t_vector){0, 1, 0}, cylinder->orientation)) > 0.99)
-		return (is_checkerboard_vertical(point, cylinder, scale));
+		return (is_checkerboard_xy(point, cylinder, scale, 1));
 	else
-		return (is_checkerboard_horizontal(point, cylinder, scale));
+		return (is_checkerboard_xy(point, cylinder, scale, 0));
 }
 
-int	is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder,
-		double scale)
-{
-	t_vector	local_point;
-	double		height;
-	double		angle;
-	t_vector	radial;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	double		normalized_angle;
-	int			u;
-	int			v;
+// int	is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder,
+// 		double scale)
+// {
+// 	t_vector	local_point;
+// 	double		height;
+// 	double		angle;
+// 	t_vector	radial;
+// 	t_vector	up;
+// 	t_vector	x_axis;
+// 	t_vector	y_axis;
+// 	double		proj_x;
+// 	double		proj_y;
+// 	double		normalized_angle;
+// 	int			u;
+// 	int			v;
 
-	local_point = subtract(point, cylinder->center);
-	height = dot(local_point, cylinder->orientation);
-	radial = subtract(local_point,
-			multiply_scalar(cylinder->orientation, height));
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, cylinder->orientation)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, cylinder->orientation));
-	y_axis = normalize(cross(cylinder->orientation, x_axis));
-	proj_x = dot(radial, x_axis);
-	proj_y = dot(radial, y_axis);
-	angle = atan2(proj_y, proj_x);
-	normalized_angle = (angle + M_PI) / (2 * M_PI);
-	u = (int)floor(height / scale);
-	v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius) / scale);
-	return ((u + v) % 2);
-}
+// 	local_point = subtract(point, cylinder->center);
+// 	height = dot(local_point, cylinder->orientation);
+// 	radial = subtract(local_point,
+// 			multiply_scalar(cylinder->orientation, height));
+// 	up = (t_vector){0, 1, 0};
+// 	if (fabs(dot(up, cylinder->orientation)) > 0.99)
+// 		up = (t_vector){1, 0, 0};
+// 	x_axis = normalize(cross(up, cylinder->orientation));
+// 	y_axis = normalize(cross(cylinder->orientation, x_axis));
+// 	proj_x = dot(radial, x_axis);
+// 	proj_y = dot(radial, y_axis);
+// 	angle = atan2(proj_y, proj_x);
+// 	normalized_angle = (angle + M_PI) / (2 * M_PI);
+// 	u = (int)floor(height / scale);
+// 	v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius) / scale);
+// 	return ((u + v) % 2);
+// }
 
 
-int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
-{
-	static double 	array[6];
-	static t_vector	vectors[6];
-	int				u;
-	int				v;
+// int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
+// {
+// 	static double 	array[6];
+// 	static t_vector	vectors[6];
+// 	int				u;
+// 	int				v;
 
-	array[2] = scale;
-	vectors[5] = subtract(point, cylinder->center);
-	array[0] = dot(vectors[5], cylinder->orientation);
-	vectors[0] = subtract(vectors[5], multiply_scalar(cylinder->orientation,
-				array[0]));
-	vectors[1] = (t_vector){0, 1, 0};
-	if (fabs(dot(vectors[1], cylinder->orientation)) > 0.99)
-		vectors[1] = (t_vector){1, 0, 0};
-	vectors[2] = normalize(cross(vectors[1], cylinder->orientation));
-	vectors[3] = normalize(cross(cylinder->orientation, vectors[2]));
-	array[3] = dot(vectors[0], vectors[2]);
-	array[4] = dot(vectors[0], vectors[2]);
-	array[1] = atan2(array[4], array[3]);
-	if (array[1] < 0)
-		array[1] += 2 * M_PI;
-	array[5] = array[1] * (cylinder->radius / array[1]);
-	u = (int)floor(array[0] / array[1]);
-	v = (int)floor(array[5]);
-	return (((u + v) % 2));
-}
+// 	array[2] = scale;
+// 	vectors[5] = subtract(point, cylinder->center);
+// 	array[0] = dot(vectors[5], cylinder->orientation);
+// 	vectors[0] = subtract(vectors[5], multiply_scalar(cylinder->orientation,
+// 				array[0]));
+// 	vectors[1] = (t_vector){0, 1, 0};
+// 	if (fabs(dot(vectors[1], cylinder->orientation)) > 0.99)
+// 		vectors[1] = (t_vector){1, 0, 0};
+// 	vectors[2] = normalize(cross(vectors[1], cylinder->orientation));
+// 	vectors[3] = normalize(cross(cylinder->orientation, vectors[2]));
+// 	array[3] = dot(vectors[0], vectors[2]);
+// 	array[4] = dot(vectors[0], vectors[2]);
+// 	array[1] = atan2(array[4], array[3]);
+// 	if (array[1] < 0)
+// 		array[1] += 2 * M_PI;
+// 	array[5] = array[1] * (cylinder->radius / array[1]);
+// 	u = (int)floor(array[0] / array[1]);
+// 	v = (int)floor(array[5]);
+// 	return (((u + v) % 2));
+// }
 
 // int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
 // {
@@ -164,6 +164,34 @@ int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
 // 	v = (int)floor(scaled_angle);
 // 	return (((u + v) % 2));
 // }
+int	is_checkerboard_xy(t_vector point, t_cylinder *cylinder, double scale, int mode)
+{
+	t_vector	vectors[5];
+	double		doubles[7];
+	
+	vectors[2] = (t_vector){0, 1, 0};
+	vectors[0] = subtract(point, cylinder->center);
+	doubles[0] = dot(vectors[0], cylinder->orientation);
+	vectors[1] = subtract(vectors[0], multiply_scalar(cylinder->orientation,
+			doubles[0]));
+	if (fabs(dot(vectors[2], cylinder->orientation)) > 0.99)
+		vectors[2] = (t_vector){1, 0, 0};
+	vectors[3] = normalize(cross(vectors[2], cylinder->orientation));
+	vectors[4] = normalize(cross(cylinder->orientation, vectors[3]));
+	doubles[2] = dot(vectors[0], vectors[3]);
+	doubles[3] = dot(vectors[0], vectors[4]);
+	doubles[1] = atan2(doubles[3], doubles[2]);
+	if (doubles[1] < 0)
+		doubles[1] += 2 * M_PI;
+	if (mode == 0)
+		doubles[4] = (doubles[1] + M_PI) / (2 * M_PI) * (2 * M_PI
+				* cylinder->radius) / scale;
+	else
+		doubles[4] = doubles[1] * (cylinder->radius / scale);
+	doubles[5] = floor(doubles[0] / scale);
+	doubles[6] = floor(doubles[4]);
+	return ((int)(doubles[5] + doubles[6]) % 2);
+}
 
 int	is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
 {

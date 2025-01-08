@@ -193,7 +193,7 @@ static void init_hit_record(t_hit_record *record)
 	record->material = (t_material){0.0, 0.0, 0.0, (t_color){0,0,0}, 0};
 	record->hit = 0;
 	record->index = 0;
-	record->type = (t_object_type)NULL;
+	// record->type = (t_object_type)NULL;
 	record->hit_from_inside = 0;
 }
 t_color	trace_ray(t_ray ray, t_scene *scene)
