@@ -665,35 +665,30 @@ t_vector cross(t_vector a, t_vector b)
     return result;
 }
 
-t_vector world_to_local(t_vector point, t_vector orientation, t_vector center)
+t_vector	world_to_local(t_vector point, t_vector orientation, t_vector center)
 {
     t_vector local_point = subtract(point, center);
-
-    // Assume `orientation` is a normalized vector representing the cylinder's axis.
-    // Build a local coordinate system using the cylinder's orientation
     t_vector up = orientation;
     t_vector right = normalize(cross(up, (fabs(up.y) < 0.999) ? (t_vector){0, 1, 0} : (t_vector){1, 0, 0}));
     t_vector forward = cross(right, up);
 
-    // Transform the local_point into this coordinate system
-    return (t_vector){
+    return (t_vector)
+    {
         dot(local_point, right),
         dot(local_point, up),
         dot(local_point, forward)
     };
 }
 
-void update_display(void *param)
+void	update_display(void *param)
 {
-    t_render_data *data = (t_render_data *)param;
-    
+    t_render_data *data;
+
+	data = (t_render_data *)param;
     mlx_image_to_window(data->mlx, data->img, 0, 0);
-    
-    // Check if rendering is finished
     pthread_mutex_lock(&data->mutex);
     if (data->rendering_finished)
     {
-        // Clean up and terminate
         mlx_terminate(data->mlx);
         pthread_mutex_unlock(&data->mutex);
         pthread_mutex_destroy(&data->mutex);
@@ -703,48 +698,42 @@ void update_display(void *param)
     pthread_mutex_unlock(&data->mutex);
 }
 
-
-void render_scene(mlx_t *mlx, t_scene *scene)
+static void init_render_scene(mlx_t *mlx, mlx_image_t *img, t_scene *scene, t_render_data *data)
 {
-    int i;
-
-    mlx_image_t *img = mlx_new_image(mlx, WIDTH, HEIGHT);
-    if (!img)
-        exit_with_error("Error creating image");
-
-    t_render_data *data = malloc(sizeof(t_render_data));
-    if (!data) {
-        perror("Error allocating render data");
-        exit(EXIT_FAILURE);
-    }
-
-    // Initialize render data
-    data->mlx = mlx;
+	data->mlx = mlx;
     data->img = img;
     data->scene = scene;
     data->threads_completed = 0;
-    data->rendering_finished = 0;  // Initialize the flag
-    pthread_mutex_init(&data->mutex, NULL);
+    data->rendering_finished = 0;
+	pthread_mutex_init(&data->mutex, NULL);
     gettimeofday(&data->start_time, NULL);
-
-    mlx_loop_hook(mlx, update_display, data);
-
-    // Create threads
-    const int num_threads = NUM_THREADS;  // Consider making this a #define NUM_THREADS
-    pthread_t threads[num_threads];
-    // int rows_per_thread = HEIGHT / num_threads;
-    i = 0;
-    while (i < num_threads)
-{
-    t_thread_data *thread_data = malloc(sizeof(t_thread_data));
-    thread_data->render_data = data;
-    thread_data->thread_id = i;           // Assign thread ID
-    thread_data->num_threads = num_threads; // Total number of threads
-    pthread_create(&threads[i], NULL, render_thread, thread_data);
-    i++;
 }
 
+void render_scene(mlx_t *mlx, t_scene *scene)
+{
+    static int		i;
+    const int		num_threads = NUM_THREADS;
+	pthread_t		threads[num_threads];
+	mlx_image_t		*img;
+	t_render_data	*data;
+	t_thread_data	*thread_data;
 
-    // Start the MLX loop
+	img = mlx_new_image(mlx, WIDTH, HEIGHT);
+    if (!img)
+        exit_with_error("Error creating image");
+    data = malloc(sizeof(t_render_data));
+    if (!data)
+		exit_with_error("Error allocating render data");
+	init_render_scene(mlx, img, scene, data);
+    mlx_loop_hook(mlx, update_display, data);
+    while (i < num_threads)
+	{
+    	thread_data = malloc(sizeof(t_thread_data));
+    	thread_data->render_data = data;
+    	thread_data->thread_id = i;
+		thread_data->num_threads = num_threads;
+    	pthread_create(&threads[i], NULL, render_thread, thread_data);
+    	i++;
+	}
     mlx_loop(mlx);
 }
