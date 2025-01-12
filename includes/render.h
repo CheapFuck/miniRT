@@ -57,6 +57,13 @@ int intersect_plane_ray(t_ray *ray, t_plane *plane, double *t_plane);
 int intersect_disc_ray(t_ray *ray, t_disc *disc, double *t_disc);
 int intersect_cylinder_ray(t_ray *ray, t_cylinder *cylinder, double *t_cy);
 int intersect_sphere_ray(t_ray *ray, t_sphere *sphere, double *t_sphere);
+void check_sphere_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
+void check_cylinder_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
+void check_disc_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
+void check_plane_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
+t_color calculate_object_color(t_hit_record *hit, t_ray ray, t_scene *scene, int depth);
+t_color apply_material_effects(t_hit_record *hit, t_ray ray, 
+    t_vector normal, t_scene *scene, t_color base_color, int depth);
 
 
 #endif // RENDER_H
