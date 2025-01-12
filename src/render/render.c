@@ -396,9 +396,10 @@ t_hit_record find_closest_intersection(t_ray ray, t_scene *scene)
     
     return (hit);
 }
-void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *scene)
+
+static get_hit_normal_sphere(t_hit_record *hit, t_vector *normal, t_scene *scene)
 {
-    if (hit->type == SPHERE)
+      if (hit->type == SPHERE)
     {
         t_sphere *sphere;
         
@@ -406,7 +407,11 @@ void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *sce
         *normal = normalize(subtract(hit->point, sphere->center));
         hit->material = sphere->material;
     }
-    else if (hit->type == CYLINDER)
+}
+
+static get_hit_normal_cylinder(t_hit_record *hit, t_vector *normal, t_scene *scene)
+{
+   if (hit->type == CYLINDER)
     {
         t_cylinder *cylinder;
         
@@ -414,7 +419,11 @@ void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *sce
         *normal = get_cylinder_normal(hit->point, cylinder);
         hit->material = cylinder->material;
     }
-    else if (hit->type == PLANE)
+}
+
+static get_hit_normal_plane(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
+{
+  if (hit->type == PLANE)
     {
         t_plane *plane;
         
@@ -424,7 +433,12 @@ void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *sce
             *normal = multiply_scalar(plane->normal, -1);
         hit->material = plane->material;
     }
-    else if (hit->type == DISC)
+}
+
+
+static get_hit_normal_disc(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
+{
+   if (hit->type == DISC)
     {
         t_disc *disc;
         
@@ -435,6 +449,91 @@ void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *sce
         hit->material = disc->material;
     }
 }
+
+
+void get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal, t_scene *scene)
+{
+    get_hit_normal_sphere(hit, normal, scene);
+    get_hit_normal_cylinder(hit, normal, scene);
+    get_hit_normal_plane(hit, normal, scene, ray);
+    get_hit_normal_disc(hit, normal, scene, ray);
+}
+static t_color get_surface_color_sphere(t_scene *scene, t_hit_record *hit)
+{
+    t_sphere *sphere;
+    t_color black;
+    t_color white;
+    black = (t_color){255, 255, 255};
+    white = (t_color){0, 0, 0};
+        sphere = &scene->spheres[hit->index];
+        if (sphere->material.checker == 1)
+        {
+            t_vector local_point;
+            double u;
+            double v;
+            
+            local_point = subtract(hit->point, sphere->center);
+            u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
+            v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
+            return(((int)(u * 20.0) % 2 == (int)(v * 20.0) % 2) 
+                ? white : black);
+        }
+        else
+            return(sphere->material.color);
+    
+}
+
+static t_color get_surface_color_cylinder(t_scene *scene, t_hit_record *hit)
+{
+    t_cylinder *cylinder;
+    t_color black;
+    t_color white;
+    black = (t_color){255, 255, 255};
+    white = (t_color){0, 0, 0};
+ 
+        cylinder = &scene->cylinders[hit->index];
+        if (cylinder->material.checker == 1)
+            return(is_checkerboard(hit->point, cylinder, 0.5) 
+                ? black : white);
+        else
+            return(cylinder->material.color);
+}
+
+
+static t_color get_surface_color_plane(t_scene *scene, t_hit_record *hit, t_vector normal)
+{
+    t_color black;
+    t_color white;
+    black = (t_color){255, 255, 255};
+    white = (t_color){0, 0, 0};
+ 
+      t_plane *plane;
+        
+        plane = &scene->planes[hit->index];
+        if (plane->material.checker == 1)
+            return(get_plane_checkerboard_color(hit->point, 
+                black, white, normal, 0.5));
+        else
+            return(plane->material.color);
+}
+
+static t_color get_surface_color_disc(t_scene *scene, t_hit_record *hit, t_vector normal)
+{
+    t_color black;
+    t_color white;
+    black = (t_color){255, 255, 255};
+    white = (t_color){0, 0, 0};
+ 
+       t_disc *disc;
+        
+        disc = &scene->discs[hit->index];
+        if (disc->material.checker == 1)
+            return(get_disc_checkerboard_color(hit->point, 
+                disc, black, white, 0.5));
+        else
+            return(disc->material.color);
+}
+
 
 t_color get_surface_color(t_hit_record *hit, t_vector normal, 
     t_scene *scene, int depth)
@@ -447,58 +546,13 @@ t_color get_surface_color(t_hit_record *hit, t_vector normal,
     white = (t_color){0, 0, 0};
     
     if (hit->type == SPHERE)
-    {
-        t_sphere *sphere;
-        
-        sphere = &scene->spheres[hit->index];
-        if (sphere->material.checker == 1)
-        {
-            t_vector local_point;
-            double u;
-            double v;
-            
-            local_point = subtract(hit->point, sphere->center);
-            u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
-            v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
-            object_color = ((int)(u * 20.0) % 2 == (int)(v * 20.0) % 2) 
-                ? white : black;
-        }
-        else
-            object_color = sphere->material.color;
-    }
+		object_color = get_surface_color_sphere(scene, hit);
     else if (hit->type == CYLINDER)
-    {
-        t_cylinder *cylinder;
-        
-        cylinder = &scene->cylinders[hit->index];
-        if (cylinder->material.checker == 1)
-            object_color = is_checkerboard(hit->point, cylinder, 0.5) 
-                ? black : white;
-        else
-            object_color = cylinder->material.color;
-    }
+        object_color = get_surface_color_cylinder(scene, hit);
     else if (hit->type == PLANE)
-    {
-        t_plane *plane;
-        
-        plane = &scene->planes[hit->index];
-        if (plane->material.checker == 1)
-            object_color = get_plane_checkerboard_color(hit->point, 
-                black, white, normal, 0.5);
-        else
-            object_color = plane->material.color;
-    }
+    	object_color = get_surface_color_plane(scene, hit, normal);
     else if (hit->type == DISC)
-    {
-        t_disc *disc;
-        
-        disc = &scene->discs[hit->index];
-        if (disc->material.checker == 1)
-            object_color = get_disc_checkerboard_color(hit->point, 
-                disc, black, white, 0.5);
-        else
-            object_color = disc->material.color;
-    }
+    	object_color = get_surface_color_disc(scene, hit, normal);
     return (apply_lighting(hit->point, normal, object_color, scene, depth + 1));
 }
 
@@ -509,11 +563,9 @@ t_color calculate_object_color(t_hit_record *hit, t_ray ray, t_scene *scene, int
     
     get_hit_normal(hit, ray, &normal, scene);  // Added scene parameter here
     final_color = get_surface_color(hit, normal, scene, depth);
-    
     if (hit->material.reflectivity > 0.0 || hit->material.transparency > 0.0)
         final_color = apply_material_effects(hit, ray, normal, 
             scene, final_color, depth);
-    
     return (final_color);
 }
 
@@ -524,7 +576,6 @@ t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 
     if (depth > MAX_REFLECTION_DEPTH)
         return (black);
-    
     hit = find_closest_intersection(ray, scene);
     if (hit.hit)
     {
