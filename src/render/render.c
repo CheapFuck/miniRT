@@ -671,36 +671,61 @@ void check_plane_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit)
 }
 
 
-t_color apply_material_effects(t_hit_record *hit, t_ray ray, 
-    t_vector normal, t_scene *scene, t_color base_color, int depth)
+typedef struct s_material_params
 {
-    t_color final_color;
-    t_ray reflection_ray;
-    t_ray refraction_ray;
+    t_hit_record    *hit;
+    t_ray           ray;
+    t_vector        normal;
+    t_scene         *scene;
+    int             depth;
+}   t_material_params;
+
+t_color apply_reflection(t_material_params params, t_color base_color)
+{
+    t_ray   reflection_ray;
     t_color reflected_color;
+
+    reflection_ray = get_reflection_ray(params.hit->point, 
+        params.normal, params.ray);
+    reflection_ray.origin = add(reflection_ray.origin,
+        multiply_scalar(reflection_ray.direction, 0.001));
+    reflected_color = trace_ray(reflection_ray, params.scene, 
+        params.depth + 1);
+    return (blend_colors(base_color, reflected_color,
+        params.hit->material.reflectivity));
+}
+
+t_color apply_refraction(t_material_params params, t_color base_color)
+{
+    t_ray   refraction_ray;
     t_color refracted_color;
 
+    refraction_ray = get_refraction_ray(params.hit->point, params.normal,
+        params.ray, params.hit->material.refractive_index);
+    refraction_ray.origin = add(refraction_ray.origin,
+        multiply_scalar(refraction_ray.direction, 0.001));
+    refracted_color = trace_ray(refraction_ray, params.scene, 
+        params.depth + 1);
+    return (blend_colors(base_color, refracted_color,
+        params.hit->material.transparency));
+}
+
+t_color apply_material_effects(t_hit_record *hit, t_ray ray,
+    t_vector normal, t_scene *scene, t_color base_color, int depth)
+{
+    t_material_params    params;
+    t_color             final_color;
+
+    params.hit = hit;
+    params.ray = ray;
+    params.normal = normal;
+    params.scene = scene;
+    params.depth = depth;
     final_color = base_color;
     if (hit->material.reflectivity > 0.0)
-    {
-        reflection_ray = get_reflection_ray(hit->point, normal, ray);
-        reflection_ray.origin = add(reflection_ray.origin, 
-            multiply_scalar(reflection_ray.direction, 0.001));
-        reflected_color = trace_ray(reflection_ray, scene, depth + 1);
-        final_color = blend_colors(final_color, reflected_color, 
-            hit->material.reflectivity);
-    }
-    
+        final_color = apply_reflection(params, final_color);
     if (hit->material.transparency > 0.0)
-    {
-        refraction_ray = get_refraction_ray(hit->point, normal, ray, 
-            hit->material.refractive_index);
-        refraction_ray.origin = add(refraction_ray.origin, 
-            multiply_scalar(refraction_ray.direction, 0.001));
-        refracted_color = trace_ray(refraction_ray, scene, depth + 1);
-        final_color = blend_colors(final_color, refracted_color, 
-            hit->material.transparency);
-    }
+        final_color = apply_refraction(params, final_color);
     return (final_color);
 }
 
