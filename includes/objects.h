@@ -13,6 +13,7 @@ typedef struct s_color {
     int b;
 } t_color;
 
+
 typedef struct s_ambient {
     double ratio;
     t_color color;
@@ -60,5 +61,7 @@ double dot(t_vector a, t_vector b);
 t_vector normalize(t_vector v);
 t_vector multiply_scalar(t_vector v, double scalar);
 t_vector add(t_vector a, t_vector b);
+
+
 
 #endif // OBJECTS_H

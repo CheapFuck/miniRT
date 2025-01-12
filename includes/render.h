@@ -62,8 +62,8 @@ void check_cylinder_intersections(t_ray ray, t_scene *scene,     t_hit_record *h
 void check_disc_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
 void check_plane_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit);
 t_color calculate_object_color(t_hit_record *hit, t_ray ray, t_scene *scene, int depth);
-t_color apply_material_effects(t_hit_record *hit, t_ray ray, 
-    t_vector normal, t_scene *scene, t_color base_color, int depth);
+t_color apply_material_effects(t_material_params params);
+
 
 
 #endif // RENDER_H

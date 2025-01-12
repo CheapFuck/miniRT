@@ -77,6 +77,15 @@ typedef struct s_scene {
 	int			has_light;
 } t_scene;
 
+typedef struct s_material_params
+{
+    t_hit_record    *hit;
+    t_ray           ray;
+    t_vector        normal;
+    t_scene         *scene;
+    t_color         base_color;
+    int             depth;
+}   t_material_params;
 
 
 #endif // SCENE_H

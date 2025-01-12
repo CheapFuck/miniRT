@@ -27,6 +27,17 @@ typedef struct s_thread_data {
 } t_thread_data;
 
 
+// typedef struct s_material_params
+// {
+//     t_hit_record    *hit;
+//     t_ray           ray;
+//     t_vector        normal;
+//     t_scene         *scene;
+//     t_color         base_color;
+//     int             depth;
+// }   t_material_params;
+
+
 // Helper function to calculate reflection ray
 t_ray get_reflection_ray(t_vector hit_point, t_vector normal, t_ray incident_ray)
 {
@@ -397,7 +408,7 @@ t_hit_record find_closest_intersection(t_ray ray, t_scene *scene)
     return (hit);
 }
 
-static get_hit_normal_sphere(t_hit_record *hit, t_vector *normal, t_scene *scene)
+static void get_hit_normal_sphere(t_hit_record *hit, t_vector *normal, t_scene *scene)
 {
       if (hit->type == SPHERE)
     {
@@ -409,7 +420,7 @@ static get_hit_normal_sphere(t_hit_record *hit, t_vector *normal, t_scene *scene
     }
 }
 
-static get_hit_normal_cylinder(t_hit_record *hit, t_vector *normal, t_scene *scene)
+static void get_hit_normal_cylinder(t_hit_record *hit, t_vector *normal, t_scene *scene)
 {
    if (hit->type == CYLINDER)
     {
@@ -421,7 +432,7 @@ static get_hit_normal_cylinder(t_hit_record *hit, t_vector *normal, t_scene *sce
     }
 }
 
-static get_hit_normal_plane(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
+static void get_hit_normal_plane(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
 {
   if (hit->type == PLANE)
     {
@@ -436,7 +447,7 @@ static get_hit_normal_plane(t_hit_record *hit, t_vector *normal, t_scene *scene,
 }
 
 
-static get_hit_normal_disc(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
+static void get_hit_normal_disc(t_hit_record *hit, t_vector *normal, t_scene *scene, t_ray ray)
 {
    if (hit->type == DISC)
     {
@@ -555,20 +566,28 @@ t_color get_surface_color(t_hit_record *hit, t_vector normal,
     	object_color = get_surface_color_disc(scene, hit, normal);
     return (apply_lighting(hit->point, normal, object_color, scene, depth + 1));
 }
-
-t_color calculate_object_color(t_hit_record *hit, t_ray ray, t_scene *scene, int depth)
+t_color calculate_object_color(t_hit_record *hit, t_ray ray, 
+    t_scene *scene, int depth)
 {
-    t_vector normal;
-    t_color final_color;
-    
-    get_hit_normal(hit, ray, &normal, scene);  // Added scene parameter here
+    t_vector          normal;
+    t_color           final_color;
+    t_material_params params;
+
+    get_hit_normal(hit, ray, &normal, scene);
     final_color = get_surface_color(hit, normal, scene, depth);
+    
     if (hit->material.reflectivity > 0.0 || hit->material.transparency > 0.0)
-        final_color = apply_material_effects(hit, ray, normal, 
-            scene, final_color, depth);
+    {
+        params.hit = hit;
+        params.ray = ray;
+        params.normal = normal;
+        params.scene = scene;
+        params.base_color = final_color;
+        params.depth = depth;
+        final_color = apply_material_effects(params);
+    }
     return (final_color);
 }
-
 t_color trace_ray(t_ray ray, t_scene *scene, int depth)
 {
     t_hit_record hit;
@@ -671,14 +690,6 @@ void check_plane_intersections(t_ray ray, t_scene *scene,     t_hit_record *hit)
 }
 
 
-typedef struct s_material_params
-{
-    t_hit_record    *hit;
-    t_ray           ray;
-    t_vector        normal;
-    t_scene         *scene;
-    int             depth;
-}   t_material_params;
 
 t_color apply_reflection(t_material_params params, t_color base_color)
 {
@@ -710,25 +721,17 @@ t_color apply_refraction(t_material_params params, t_color base_color)
         params.hit->material.transparency));
 }
 
-t_color apply_material_effects(t_hit_record *hit, t_ray ray,
-    t_vector normal, t_scene *scene, t_color base_color, int depth)
+t_color apply_material_effects(t_material_params params)
 {
-    t_material_params    params;
-    t_color             final_color;
+    t_color final_color;
 
-    params.hit = hit;
-    params.ray = ray;
-    params.normal = normal;
-    params.scene = scene;
-    params.depth = depth;
-    final_color = base_color;
-    if (hit->material.reflectivity > 0.0)
+    final_color = params.base_color;
+    if (params.hit->material.reflectivity > 0.0)
         final_color = apply_reflection(params, final_color);
-    if (hit->material.transparency > 0.0)
+    if (params.hit->material.transparency > 0.0)
         final_color = apply_refraction(params, final_color);
     return (final_color);
 }
-
 double schlick_reflection_coefficient(double cos_theta, double refractive_index)
 {
     double r0 = pow((1 - refractive_index) / (1 + refractive_index), 2);
