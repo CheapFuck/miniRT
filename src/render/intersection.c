@@ -1,23 +1,17 @@
 #include "../../includes/minirt.h"
 
-// Check if a ray intersects a sphere
-int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
+int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
 {
     t_vector oc = subtract(ray->origin, sphere->center);
     double a = dot(ray->direction, ray->direction);
     double b = 2.0 * dot(oc, ray->direction);
     double c = dot(oc, oc) - (sphere->radius * sphere->radius);
     double discriminant = b * b - 4 * a * c;
-    // If the discriminant is negative, there's no intersection
     if (discriminant < 0)
-        return 0;
-
-    // Calculate the two possible intersection distances
+        return (0);
     double sqrt_discriminant = sqrt(discriminant);
     double t1 = (-b - sqrt_discriminant) / (2.0 * a);
     double t2 = (-b + sqrt_discriminant) / (2.0 * a);
-
-    // Find the nearest positive intersection
     if (t1 > 0 && t2 > 0)
         *t = fmin(t1, t2);
     else if (t1 > 0)
@@ -25,8 +19,7 @@ int intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
     else if (t2 > 0)
         *t = t2;
     else
-        return 0;
-      // Ensure that the intersection is in front of the camera
+        return (0);
     return (*t > 0);
 }
 

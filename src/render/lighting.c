@@ -466,43 +466,25 @@ t_color apply_lighting(t_vector hit_point, t_vector normal, t_color object_color
     if (depth > MAX_REFLECTION_DEPTH)
         return ((t_color){0, 0, 0});
     t_color light_contribution = {0, 0, 0};
-
-    // Ambient lighting
     light_contribution.r += 255 * scene->ambient.ratio;
     light_contribution.g += 255 * scene->ambient.ratio;
     light_contribution.b += 255 * scene->ambient.ratio;
-
-    // View direction (from hit point to camera)
     t_vector view_dir = normalize(subtract(scene->camera.pos, hit_point));
-
-    // Diffuse and specular lighting
    i = 0;
 while (i < scene->num_lights) {
     t_light light = scene->lights[i];
     double shadow_factor = compute_shadow_factor(hit_point, light, scene, 8); // 32 samples for soft shadows
-
     if (shadow_factor > 0) { // Only compute lighting if not fully in shadow
-        // Light direction
         t_vector light_dir = normalize(subtract(light.pos, hit_point));
-        
-        // Diffuse lighting
         double diffuse_intensity = fmax(0.0, dot(normal, light_dir)) * light.brightness * shadow_factor;
-
-        // Specular lighting
         t_vector reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0 * dot(normal, light_dir)), light_dir));
         double specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 50) * light.brightness * shadow_factor * 1; // 50 is the shininess factor
-
-        // Add contributions to light
         light_contribution.r += light.color.r * (diffuse_intensity + specular_intensity);
         light_contribution.g += light.color.g * (diffuse_intensity + specular_intensity);
         light_contribution.b += light.color.b * (diffuse_intensity + specular_intensity);
     }
-
     i++;
 }
-
-
-    // Combine light contribution with object color
     return combine_color(light_contribution, object_color);
 }
 
