@@ -11,7 +11,6 @@
 # include "scene.h"
 # include "objects.h"
 # include "parser.h"
-# include "utils.h"
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
 
