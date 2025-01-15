@@ -54,10 +54,10 @@ t_vector	scale_vector(t_vector v, double s);
 double		length_squared(t_vector v);
 void		parse_discs(char *line, t_scene *scene);
 t_color		combine_color(t_color light_color, t_color object_color);
-t_color		get_plane_checkerboard_color(t_vector point, t_color color1,
-				t_color color2, t_vector normal, double scale);
+t_color		get_plane_checkerboard_color(t_vector point, t_vector normal,
+				double scale);
 t_color		get_disc_checkerboard_color(t_vector point, t_disc *disc,
-				t_color color1, t_color color2, double scale);
+				double scale);
 int			intersect_plane_ray(t_ray *ray, t_plane *plane, double *t_plane);
 int			intersect_disc_ray(t_ray *ray, t_disc *disc, double *t_disc);
 int			intersect_cylinder_ray(t_ray *ray, t_cylinder *cylinder,

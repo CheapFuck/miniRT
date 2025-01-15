@@ -164,12 +164,17 @@ int	is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
 	return ((u + v) % 2);
 }
 
-t_color	get_plane_checkerboard_color(t_vector point, t_color color1,
-	t_color color2, t_vector normal, double scale)
+t_color	get_plane_checkerboard_color(t_vector point, t_vector normal,
+	double scale)
 {
+	t_color	black;
+	t_color	white;
+
+	white = (t_color){255, 255, 255};
+	black = (t_color){0, 0, 0};
 	if (is_plane_checkerboard(point, normal, scale))
-		return (color1);
-	return (color2);
+		return (black);
+	return (white);
 }
 
 int	is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
@@ -196,12 +201,16 @@ int	is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
 	return ((u + v) % 2);
 }
 
-t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc,
-	t_color color1, t_color color2, double scale)
+t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc, double scale)
 {
+	t_color	black;
+	t_color	white;
+
+	white = (t_color){255, 255, 255};
+	black = (t_color){0, 0, 0};
 	if (is_disc_checkerboard(point, disc, scale))
-		return (color1);
-	return (color2);
+		return (black);
+	return (white);
 }
 
 t_color	get_checkerboard_color(t_vector point, t_cylinder *cylinder,

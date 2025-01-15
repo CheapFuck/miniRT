@@ -318,32 +318,24 @@ static t_color	get_surface_color_cylinder(t_scene *scene, t_hit_record *hit)
 static t_color	get_surface_color_plane(t_scene *scene, t_hit_record *hit,
 	t_vector normal)
 {
-	t_color	black;
-	t_color	white;
 	t_plane	*plane;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
 	plane = &scene->planes[hit->index];
 	if (plane->material.checker == 1)
 		return (get_plane_checkerboard_color(hit->point,
-				black, white, normal, 0.5));
+				normal, 0.5));
 	else
 		return (plane->material.color);
 }
 
 static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit)
 {
-	t_color	black;
-	t_color	white;
 	t_disc	*disc;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
 	disc = &scene->discs[hit->index];
 	if (disc->material.checker == 1)
 		return (get_disc_checkerboard_color(hit->point,
-				disc, black, white, 0.5));
+				disc, 0.5));
 	else
 		return (disc->material.color);
 }
