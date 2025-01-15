@@ -46,7 +46,6 @@ int	main(int argc, char **argv)
 	mlx = mlx_init(WIDTH, HEIGHT, "miniRT", true);
 	if (!mlx)
 		exit_with_error("Error initializing MLX42");
-
 	mlx_loop_hook(mlx, ft_hook, mlx);
 	render_scene(mlx, &scene);
 	mlx_loop(mlx);
