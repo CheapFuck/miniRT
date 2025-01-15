@@ -205,11 +205,16 @@ t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc,
 }
 
 t_color	get_checkerboard_color(t_vector point, t_cylinder *cylinder,
-	t_color color1, t_color color2, double scale)
+	double scale)
 {
+	t_color	black;
+	t_color	white;
+
+	black = (t_color){255, 255, 255};
+	white = (t_color){0, 0, 0};
 	if (is_checkerboard(point, cylinder, scale))
-		return (color1);
-	return (color2);
+		return (black);
+	return (white);
 }
 
 static int	intersect_sphere_helper(t_scene *scene, t_ray *shadow_ray,

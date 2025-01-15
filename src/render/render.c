@@ -94,11 +94,11 @@ t_color	combine_color(t_color light_color, t_color object_color)
 }
 
 t_color	get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder,
-	t_color color1, t_color color2, double scale)
+	double scale)
 {
 	if (is_cylinder_checkerboard(point, cylinder, scale))
-		return (color1);
-	return (color2);
+		return ((t_color){255, 255, 255});
+	return ((t_color){0, 0, 0});
 }
 
 int	is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder,
@@ -170,7 +170,6 @@ static t_ray	get_refraction_ray(t_vector point, t_vector normal,
 	}
 	return (refraction_ray);
 }
-
 
 static void	check_cylinder_intersections(t_ray ray, t_scene *scene,
 	t_hit_record *hit)
@@ -277,22 +276,20 @@ void	get_hit_normal(t_hit_record *hit, t_ray ray, t_vector *normal,
 static t_color	get_surface_color_sphere(t_scene *scene, t_hit_record *hit)
 {
 	t_sphere	*sphere;
-	t_color		black;
-	t_color		white;
 	t_vector	local_point;
 	double		u;
 	double		v;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
 	sphere = &scene->spheres[hit->index];
 	if (sphere->material.checker == 1)
 	{
 		local_point = subtract(hit->point, sphere->center);
 		u = 2.0 + atan2(local_point.z, local_point.x) / (2 * M_PI);
 		v = 2.0 - asin(local_point.y / sphere->radius) / M_PI;
-		return (((int)(u * 20.0) % 2 == (int)(v * 20.0) % 2)
-			? white : black);
+		if ((int)(u * 20.0) % 2 == (int)(v * 20.0) % 2)
+			return ((t_color){255, 255, 255});
+		else
+			return ((t_color){0, 0, 0});
 	}
 	else
 		return (sphere->material.color);
@@ -308,8 +305,12 @@ static t_color	get_surface_color_cylinder(t_scene *scene, t_hit_record *hit)
 	white = (t_color){0, 0, 0};
 	cylinder = &scene->cylinders[hit->index];
 	if (cylinder->material.checker == 1)
-		return (is_checkerboard(hit->point, cylinder, 0.5)
-			? black : white);
+	{
+		if (is_checkerboard(hit->point, cylinder, 0.5))
+			return (black);
+		else
+			return (white);
+	}
 	else
 		return (cylinder->material.color);
 }
@@ -331,8 +332,7 @@ static t_color	get_surface_color_plane(t_scene *scene, t_hit_record *hit,
 		return (plane->material.color);
 }
 
-static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit,
-	t_vector normal)
+static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit)
 {
 	t_color	black;
 	t_color	white;
@@ -348,15 +348,16 @@ static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit,
 		return (disc->material.color);
 }
 
-t_color	get_surface_color(t_hit_record *hit, t_vector normal,
-	t_scene *scene, int depth)
+static t_color	get_surface_color(t_hit_record *hit, t_vector normal,
+	t_scene *scene)
 {
 	t_color	black;
 	t_color	white;
 	t_color	object_color;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
+	white = (t_color){255, 255, 255};
+	black = (t_color){0, 0, 0};
+	object_color = black;
 	if (hit->type == SPHERE)
 		object_color = get_surface_color_sphere(scene, hit);
 	else if (hit->type == CYLINDER)
@@ -364,8 +365,8 @@ t_color	get_surface_color(t_hit_record *hit, t_vector normal,
 	else if (hit->type == PLANE)
 		object_color = get_surface_color_plane(scene, hit, normal);
 	else if (hit->type == DISC)
-		object_color = get_surface_color_disc(scene, hit, normal);
-	return (apply_lighting(hit->point, normal, object_color, scene, depth + 1));
+		object_color = get_surface_color_disc(scene, hit);
+	return (apply_lighting(hit->point, normal, object_color, scene));
 }
 
 t_color	calculate_object_color(t_hit_record *hit, t_ray ray,
@@ -376,7 +377,7 @@ t_color	calculate_object_color(t_hit_record *hit, t_ray ray,
 	t_material_params	params;
 
 	get_hit_normal(hit, ray, &normal, scene);
-	final_color = get_surface_color(hit, normal, scene, depth);
+	final_color = get_surface_color(hit, normal, scene);
 	if (hit->material.reflectivity > 0.0 || hit->material.transparency > 0.0)
 	{
 		params.hit = hit;
@@ -583,27 +584,40 @@ int32_t	ft_pixel(int32_t r, int32_t g, int32_t b, int32_t a)
 	return (r << 24 | g << 16 | b << 8 | a);
 }
 
+static t_vector	scale(t_vector v, double s)
+{
+	t_vector	result;
+
+	result.x = v.x * s;
+	result.y = v.y * s;
+	result.z = v.z * s;
+	return (result);
+}
+
+// Function to create a ray from the camera for a specific pixel
 t_ray	create_ray(int x, int y, t_camera *camera)
 {
 	t_ray		ray;
-	double		aspect_ratio;
-	double		fov_scale;
-	double		norm_x;
-	double		norm_y;
-	t_vector	right;
-	t_vector	up;
+	t_vector	r_vector;
+	t_vector	dir[3];
+	double		aspect_fov_scale;
+	t_vector	image_point;
 
-	aspect_ratio = (double)WIDTH / HEIGHT;
-	fov_scale = tan((camera->fov * M_PI / 180) / 2);
-	norm_x = (2 * (x + 0.5) / WIDTH - 1) * aspect_ratio * fov_scale;
-	norm_y = (1 - 2 * (y + 0.5) / HEIGHT) * fov_scale;
-	right = normalize(cross((t_vector){0, 1, 0}, camera->orientation));
-	up = cross(camera->orientation, right);
+	r_vector.x = 0;
+	r_vector.y = 1;
+	r_vector.z = 0;
+	dir[0] = normalize(camera->orientation);
+	dir[1] = normalize(cross(r_vector, dir[0]));
+	dir[2] = cross(dir[0], dir[1]);
+	aspect_fov_scale = tan((camera->fov * M_PI / 180) / 2) * (double)WIDTH
+		/ HEIGHT;
+	image_point.x = (2 * (x + 0.5) / WIDTH - 1) * aspect_fov_scale;
+	image_point.y = (1 - 2 * (y + 0.5) / HEIGHT) * aspect_fov_scale;
+	image_point.z = 1;
 	ray.origin = camera->pos;
-	ray.direction.x = norm_x * right.x + norm_y * up.x + camera->orientation.x;
-	ray.direction.y = norm_x * right.y + norm_y * up.y + camera->orientation.y;
-	ray.direction.z = norm_x * right.z + norm_y * up.z + camera->orientation.z;
-	ray.direction = normalize(ray.direction);
+	ray.direction = normalize(add(add(scale(dir[1], image_point.x),
+					scale(dir[2], image_point.y)), scale(dir[0],
+					image_point.z)));
 	return (ray);
 }
 
@@ -624,10 +638,15 @@ t_vector	world_to_local(t_vector point, t_vector orientation,
 	t_vector	up;
 	t_vector	right;
 	t_vector	forward;
+	t_vector	temp;
 
 	local_point = subtract(point, center);
 	up = orientation;
-	right = normalize(cross(up, (fabs(up.y) < 0.999) ? (t_vector){0, 1, 0} : (t_vector){1, 0, 0}));
+	if (fabs(up.y) < 0.999)
+		temp = (t_vector){0, 1, 0};
+	else
+		temp = (t_vector){1, 0, 0};
+	right = normalize(cross(up, temp));
 	forward = cross(right, up);
 	return ((t_vector)
 		{
@@ -670,8 +689,7 @@ static void	init_render_scene(mlx_t *mlx, mlx_image_t *img, t_scene *scene,
 void	render_scene(mlx_t *mlx, t_scene *scene)
 {
 	static int		i;
-	const int		num_threads = NUM_THREADS;
-	pthread_t		threads[num_threads];
+	pthread_t		threads[NUM_THREADS];
 	mlx_image_t		*img;
 	t_render_data	*data;
 	t_thread_data	*thread_data;
@@ -684,12 +702,12 @@ void	render_scene(mlx_t *mlx, t_scene *scene)
 		exit_with_error("Error allocating render data");
 	init_render_scene(mlx, img, scene, data);
 	mlx_loop_hook(mlx, update_display, data);
-	while (i < num_threads)
+	while (i < NUM_THREADS)
 	{
 		thread_data = malloc(sizeof(t_thread_data));
 		thread_data->render_data = data;
 		thread_data->thread_id = i;
-		thread_data->num_threads = num_threads;
+		thread_data->num_threads = NUM_THREADS;
 		pthread_create(&threads[i], NULL, render_thread, thread_data);
 		i++;
 	}
