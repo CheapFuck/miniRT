@@ -15,15 +15,13 @@
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
 
+# define WIDTH  1280
+# define HEIGHT 1024
+# define NUM_THREADS 1
 
-#define WIDTH  1280
-#define HEIGHT 1024
-#define NUM_THREADS 1
-
-void    render_scene(mlx_t *mlx, t_scene *scene);
-void    exit_with_error(const char *msg);
-int     main(int argc, char **argv);
-void    ft_hook(void* param);
+void	render_scene(mlx_t *mlx, t_scene *scene);
+void	exit_with_error(const char *msg);
+int		main(int argc, char **argv);
+void	ft_hook(void *param);
 
 #endif // MINIRT_H
-
