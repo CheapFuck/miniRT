@@ -230,7 +230,7 @@ int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 		if (intersect_sphere(&shadow_ray, &scene->spheres[i], &t_shadow)
 			&& t_shadow < light_distance)
 			return (1);
-	i++;
+		i++;
 	}
 	i = 0;
 	while (i < scene->num_cylinders)
