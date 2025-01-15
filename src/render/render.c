@@ -343,13 +343,9 @@ static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit)
 static t_color	get_surface_color(t_hit_record *hit, t_vector normal,
 	t_scene *scene)
 {
-	t_color	black;
-	t_color	white;
 	t_color	object_color;
 
-	white = (t_color){255, 255, 255};
-	black = (t_color){0, 0, 0};
-	object_color = black;
+	object_color = (t_color){0, 0, 0};
 	if (hit->type == SPHERE)
 		object_color = get_surface_color_sphere(scene, hit);
 	else if (hit->type == CYLINDER)
