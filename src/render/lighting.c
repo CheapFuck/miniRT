@@ -14,43 +14,44 @@ t_vector	random_point_on_light(t_light light)
 	return (random_point);
 }
 
+static t_ray	generate_shadow_ray(t_vector hit_point, t_light light)
+{
+	t_ray		shadow_ray;
+	t_vector	light_point;
+	t_vector	shadow_ray_dir;
+
+	light_point = random_point_on_light(light);
+	shadow_ray_dir = normalize(subtract(light_point, hit_point));
+	shadow_ray.origin = add(hit_point, multiply_scalar(shadow_ray_dir, 1e-4));
+	shadow_ray.direction = shadow_ray_dir;
+	return (shadow_ray);
+}
+
+static double	compute_distance(t_vector a, t_vector b)
+{
+	t_vector	diff;
+
+	diff = subtract(a, b);
+	return (sqrt(dot(diff, diff)));
+}
+
+// Compute the shadow factor for a given point
 double	compute_shadow_factor(t_vector hit_point, t_light light,
-	t_scene *scene, int num_samples)
+			t_scene *scene, int num_samples)
 {
 	int			unblocked_rays;
 	int			i;
-	t_vector	light_point;
-	t_vector	shadow_ray_dir;
-	double		light_distance;
 	t_ray		shadow_ray;
-	int			in_shadow;
-	int			j;
-	double		t_shadow;
+	double		light_distance;
 
 	unblocked_rays = 0;
 	i = 0;
 	while (i < num_samples)
 	{
-		light_point = random_point_on_light(light);
-		shadow_ray_dir = normalize(subtract(light_point, hit_point));
-		light_distance = sqrt(dot(subtract(light_point, hit_point),
-					subtract(light_point, hit_point)));
-		shadow_ray.origin = add(hit_point, multiply_scalar(shadow_ray_dir,
-					1e-4));  //check this
-		shadow_ray.direction = shadow_ray_dir;
-		in_shadow = 0;
-		j = 0;
-		while (j < scene->num_spheres)
-		{
-			if (intersect_sphere(&shadow_ray, &scene->spheres[j], &t_shadow)
-				&& t_shadow < light_distance)
-			{
-				in_shadow = 1;
-				break ;
-			}
-			j++;
-		}
-		if (!in_shadow)
+		shadow_ray = generate_shadow_ray(hit_point, light);
+		light_distance = compute_distance(random_point_on_light(light),
+				hit_point);
+		if (!is_in_shadow(&shadow_ray, scene, light_distance))
 			unblocked_rays++;
 		i++;
 	}
@@ -211,39 +212,15 @@ t_color	get_checkerboard_color(t_vector point, t_cylinder *cylinder,
 	return (color2);
 }
 
-int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
+static int	intersect_sphere_helper(t_scene *scene, t_ray *shadow_ray,
+	double t_shadow, double light_distance)
 {
-	int			i;
-	t_vector	light_dir;
-	double		light_distance;
-	t_ray		shadow_ray;
-	double		t_shadow;
+	int	i;
 
-	light_dir = normalize(subtract(light.pos, hit_point));
-	light_distance = sqrt(dot(subtract(light.pos, hit_point),
-				subtract(light.pos, hit_point)));
-	shadow_ray.origin = add(hit_point, multiply_scalar(light_dir, 1e-4));
-	shadow_ray.direction = light_dir;
 	i = 0;
 	while (i < scene->num_spheres)
 	{
-		if (intersect_sphere(&shadow_ray, &scene->spheres[i], &t_shadow)
-			&& t_shadow < light_distance)
-			return (1);
-		i++;
-	}
-	i = 0;
-	while (i < scene->num_cylinders)
-	{
-		if (intersect_cylinder(&shadow_ray, &scene->cylinders[i], &t_shadow)
-			&& t_shadow < light_distance)
-			return (1);
-		i++;
-	}
-	i = 0;
-	while (i < scene->num_planes)
-	{
-		if (intersect_plane(&shadow_ray, &scene->planes[i], &t_shadow)
+		if (intersect_sphere(shadow_ray, &scene->spheres[i], &t_shadow)
 			&& t_shadow < light_distance)
 			return (1);
 		i++;
@@ -251,47 +228,120 @@ int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 	return (0);
 }
 
+static int	intersect_cylinder_helper(t_scene *scene, t_ray *shadow_ray,
+	double t_shadow, double light_distance)
+{
+	int	i;
+
+	i = 0;
+	while (i < scene->num_cylinders)
+	{
+		if (intersect_cylinder(shadow_ray, &scene->cylinders[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+static int	intersect_plane_helper(t_scene *scene, t_ray *shadow_ray,
+	double t_shadow, double light_distance)
+{
+	int	i;
+
+	i = 0;
+	while (i < scene->num_cylinders)
+	{
+		if (intersect_plane(shadow_ray, &scene->planes[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+static int	intersect_disc_helper(t_scene *scene, t_ray *shadow_ray,
+	double t_shadow, double light_distance)
+{
+	int	i;
+
+	i = 0;
+	while (i < scene->num_discs)
+	{
+		if (intersect_disc(shadow_ray, &scene->discs[i], &t_shadow)
+			&& t_shadow < light_distance)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+int	is_in_shadow(t_ray *shadow_ray, t_scene *scene,
+	double light_distance)
+{
+	double		t_shadow;
+
+	t_shadow = 0.0;
+	if (intersect_sphere_helper(scene, shadow_ray, t_shadow, light_distance))
+		return (1);
+	if (intersect_cylinder_helper(scene, shadow_ray, t_shadow, light_distance))
+		return (1);
+	if (intersect_plane_helper(scene, shadow_ray, t_shadow, light_distance))
+		return (1);
+	if (intersect_disc_helper(scene, shadow_ray, t_shadow, light_distance))
+		return (1);
+	return (0);
+}
+
+static t_color	compute_ambient_light(t_color light_contribution,
+	double ambient_ratio)
+{
+	light_contribution.r = light_contribution.r * ambient_ratio;
+	light_contribution.g = light_contribution.g * ambient_ratio;
+	light_contribution.b = light_contribution.b * ambient_ratio;
+	return (light_contribution);
+}
+
+static t_color	compute_light_contribution(t_vector hit_point, t_vector normal,
+	t_light light, t_scene *scene)
+{
+	t_vector	light_dir;
+	double		shadow_factor;
+	double		diffuse_intensity;
+	t_color		contribution;
+
+	contribution = (t_color){0, 0, 0};
+	shadow_factor = compute_shadow_factor(hit_point, light, scene, SAMPLES);
+	if (shadow_factor > 0)
+	{
+		light_dir = normalize(subtract(light.pos, hit_point));
+		diffuse_intensity = fmax(0.0, dot(normal, light_dir))
+			* light.brightness * shadow_factor;
+		contribution.r = light.color.r * diffuse_intensity;
+		contribution.g = light.color.g * diffuse_intensity;
+		contribution.b = light.color.b * diffuse_intensity;
+	}
+	return (contribution);
+}
+
 t_color	apply_lighting(t_vector hit_point, t_vector normal,
-	t_color object_color, t_scene *scene, int depth)
+	t_color object_color, t_scene *scene)
 {
 	int			i;
 	t_color		light_contribution;
-	t_vector	view_dir;
-	t_light		light;
-	double		shadow_factor;
-	t_vector	light_dir;
-	double		diffuse_intensity;
-	t_vector	reflect_dir;
-	double		specular_intensity;
+	t_color		current_contribution;
 
-	if (depth > MAX_REFLECTION_DEPTH)
-		return ((t_color){0, 0, 0});
 	light_contribution = (t_color){0, 0, 0};
-	light_contribution.r += 255 * scene->ambient.ratio;
-	light_contribution.g += 255 * scene->ambient.ratio;
-	light_contribution.b += 255 * scene->ambient.ratio;
-	view_dir = normalize(subtract(scene->camera.pos, hit_point));
+	light_contribution = compute_ambient_light(scene->ambient.color,
+			scene->ambient.ratio);
 	i = 0;
 	while (i < scene->num_lights)
 	{
-		light = scene->lights[i];
-		shadow_factor = compute_shadow_factor(hit_point, light, scene, 8);
-		if (shadow_factor > 0)
-		{
-			light_dir = normalize(subtract(light.pos, hit_point));
-			diffuse_intensity = fmax(0.0, dot(normal, light_dir))
-				* light.brightness * shadow_factor;
-			reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0
-							* dot(normal, light_dir)), light_dir));
-			specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 50)
-				* light.brightness * shadow_factor * 1;
-			light_contribution.r += light.color.r * (diffuse_intensity
-					+ specular_intensity);
-			light_contribution.g += light.color.g * (diffuse_intensity
-					+ specular_intensity);
-			light_contribution.b += light.color.b * (diffuse_intensity
-					+ specular_intensity);
-		}
+		current_contribution = compute_light_contribution(hit_point, normal,
+				scene->lights[i], scene);
+		light_contribution.r += current_contribution.r;
+		light_contribution.g += current_contribution.g;
+		light_contribution.b += current_contribution.b;
 		i++;
 	}
 	return (combine_color(light_contribution, object_color));

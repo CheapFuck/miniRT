@@ -17,6 +17,9 @@
 # define WIDTH  1280
 # define HEIGHT 1024
 # define NUM_THREADS 1
+# define EPSILON	1e-6
+# define SAMPLES    1
+
 
 void	render_scene(mlx_t *mlx, t_scene *scene);
 void	exit_with_error(const char *msg);

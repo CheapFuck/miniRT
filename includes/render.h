@@ -9,9 +9,11 @@ void		render_scene(mlx_t *mlx, t_scene *scene);
 int			intersect_sphere(t_ray *ray, t_sphere *sphere, double *t);
 int			intersect_cylinder(t_ray *ray, t_cylinder *cylinder, double *t);
 int			intersect_plane(t_ray *ray, t_plane *plane, double *t);
-t_color		apply_lighting(t_vector hit_point, t_vector normal,
-				t_color object_color, t_scene *scene, int depth);
-int			is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
+t_color	apply_lighting(t_vector hit_point, t_vector normal, t_color object_color, t_scene *scene);
+// t_color		apply_lighting(t_vector hit_point, t_vector normal,
+// 				t_color object_color, t_scene *scene, int depth);
+// int			is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
+int			is_in_shadow(t_ray *shadow_ray, t_scene *scene, double light_distance);
 t_vector	random_point_on_light(t_light light);
 double		compute_shadow_factor(t_vector hit_point, t_light light,
 				t_scene *scene, int num_samples);
@@ -65,8 +67,8 @@ int			intersect_sphere_ray(t_ray *ray, t_sphere *sphere,
 				double *t_sphere);
 void		check_sphere_intersections(t_ray ray, t_scene *scene,
 				t_hit_record *hit);
-void		check_cylinder_intersections(t_ray ray, t_scene *scene,
-				t_hit_record *hit);
+// void		check_cylinder_intersections(t_ray ray, t_scene *scene,
+// 				t_hit_record *hit);
 void		check_disc_intersections(t_ray ray, t_scene *scene,
 				t_hit_record *hit);
 void		check_plane_intersections(t_ray ray, t_scene *scene,

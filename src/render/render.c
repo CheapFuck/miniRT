@@ -171,6 +171,29 @@ static t_ray	get_refraction_ray(t_vector point, t_vector normal,
 	return (refraction_ray);
 }
 
+
+static void	check_cylinder_intersections(t_ray ray, t_scene *scene,
+	t_hit_record *hit)
+{
+	int		i;
+	double	t_cylinder;
+
+	i = 0;
+	while (i < scene->num_cylinders)
+	{
+		ray.direction = normalize(ray.direction);
+		if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cylinder)
+			&& t_cylinder < hit->t)
+		{
+			hit->hit = 1;
+			hit->t = t_cylinder;
+			hit->type = CYLINDER;
+			hit->index = i;
+		}
+		i++;
+	}
+}
+
 t_hit_record	find_closest_intersection(t_ray ray, t_scene *scene)
 {
 	t_hit_record	hit;
@@ -401,28 +424,6 @@ void	check_sphere_intersections(t_ray ray, t_scene *scene,
 			hit->hit = 1;
 			hit->t = t_sphere;
 			hit->type = SPHERE;
-			hit->index = i;
-		}
-		i++;
-	}
-}
-
-void	check_cylinder_intersections(t_ray ray, t_scene *scene,
-	t_hit_record *hit)
-{
-	int		i;
-	double	t_cylinder;
-
-	i = 0;
-	while (i < scene->num_cylinders)
-	{
-		ray.direction = normalize(ray.direction);
-		if (intersect_cylinder(&ray, &scene->cylinders[i], &t_cylinder)
-			&& t_cylinder < hit->t)
-		{
-			hit->hit = 1;
-			hit->t = t_cylinder;
-			hit->type = CYLINDER;
 			hit->index = i;
 		}
 		i++;
