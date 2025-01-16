@@ -372,6 +372,8 @@ t_color	trace_ray(t_ray ray, t_scene *scene, int depth)
 	t_hit_record	hit;
 	t_color			black;
 
+	//hoi lala
+
 	black = (t_color){0, 0, 0};
 	if (depth > MAX_REFLECTION_DEPTH)
 		return (black);
