@@ -161,6 +161,7 @@ static t_ray	get_refraction_ray(t_vector point, t_vector normal,
 t_hit_record	find_closest_intersection(t_ray ray, t_scene *scene)
 {
 	t_hit_record	hit;
+
 	hit = (t_hit_record){0};
 	hit.index = -1;
 	hit.t = INFINITY;
