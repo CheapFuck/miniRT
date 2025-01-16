@@ -1,6 +1,6 @@
 #include "../includes/minirt.h"
 
-void	exit_with_error(const char *msg)
+void	exit_with_error(char *msg)
 {
 	if (msg)
 	{

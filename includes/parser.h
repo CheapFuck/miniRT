@@ -18,7 +18,7 @@ int			parse_color(char *color_str, t_color *color);
 t_vector	parse_vector(const char *str);
 double		parse_double(const char *str);
 int			parse_int(const char *str);
-void		exit_with_error(const char *msg);
+void		exit_with_error(char *msg);
 void		save_image_to_file(const unsigned char *raw_image_data,
 				unsigned width, unsigned height, const char *filename);
 int			validate_ratio(double value, const char *element_name);

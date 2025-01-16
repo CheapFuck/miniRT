@@ -52,8 +52,15 @@ typedef struct s_sphere
 	t_vector	center;
 	double		radius;
 	t_material	material;
+	t_vector	oc;
+	double		a;
+	double		b;
+	double		c;
+	double		discriminant;
+	double		sqrt_discriminant;
+	double		t1;
+	double		t2;
 }	t_sphere;
-
 typedef struct s_scene
 {
 	t_ambient	ambient;
