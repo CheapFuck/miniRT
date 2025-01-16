@@ -9,14 +9,14 @@ int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
 
 	oc = subtract(ray->origin, sphere->center);
 	discriminant = pow(dot(oc, ray->direction), 2) - dot(oc, oc)
-			+ sphere->radius * sphere->radius;
+		+ sphere->radius * sphere->radius;
 	if (discriminant < 0)
 		return (0);
 	discriminant = sqrt(discriminant);
 	t1 = (-dot(oc, ray->direction) - discriminant) / dot(ray->direction,
-		ray->direction);
+			ray->direction);
 	t2 = (-dot(oc, ray->direction) + discriminant) / dot(ray->direction,
-		ray->direction);
+			ray->direction);
 	if (t1 > 0 && t2 > 0)
 		*t = fmin(t1, t2);
 	else if (t1 > 0)
@@ -27,8 +27,6 @@ int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
 		return (0);
 	return (1);
 }
-
-
 
 int	intersect_plane(t_ray *ray, t_plane *plane, double *t)
 {
@@ -80,56 +78,48 @@ int	intersect_disc(t_ray *ray, t_disc *disc, double *t)
 	return (1);
 }
 
+static void	calc_vars(t_intersect_cylinder *vars, t_cylinder *cylinder,
+	t_ray *ray)
+{
+	vars->oc = subtract(ray->origin, cylinder->center);
+	vars->axis = normalize(cylinder->orientation);
+	vars->dot_dir_axis = dot(ray->direction, vars->axis);
+	vars->dot_oc_axis = dot(vars->oc, vars->axis);
+	vars->d = subtract(ray->direction, multiply_scalar(vars->axis,
+				vars->dot_dir_axis));
+	vars->o = subtract(vars->oc, multiply_scalar(vars->axis,
+				vars->dot_oc_axis));
+	vars->a = dot(vars->d, vars->d);
+	vars->b = 2.0 * dot(vars->d, vars->o);
+	vars->c = dot(vars->o, vars->o) - (cylinder->radius * cylinder->radius);
+	vars->discriminant = vars->b * vars->b - 4 * vars->a * vars->c;
+}
+
 int	intersect_cylinder(t_ray *ray, t_cylinder *cylinder, double *t)
 {
-	t_vector	oc;
-	t_vector	axis;
-	double		dot_dir_axis;
-	double		dot_oc_axis;
-	t_vector	d;
-	t_vector	o;
-	double		a;
-	double		b;
-	double		c;
-	double		discriminant;
-	double		sqrt_discriminant;
-	double		t1;
-	double		t2;
-	t_vector	p1;
-	double		height1;
-	t_vector	p2;
-	double		height2;
-	int			hit;
+	t_intersect_cylinder	vars;
 
-	oc = subtract(ray->origin, cylinder->center);
-	axis = normalize(cylinder->orientation);
-	dot_dir_axis = dot(ray->direction, axis);
-	dot_oc_axis = dot(oc, axis);
-	d = subtract(ray->direction, multiply_scalar(axis, dot_dir_axis));
-	o = subtract(oc, multiply_scalar(axis, dot_oc_axis));
-	a = dot(d, d);
-	b = 2.0 * dot(d, o);
-	c = dot(o, o) - (cylinder->radius * cylinder->radius);
-	discriminant = b * b - 4 * a * c;
-	if (discriminant < 0)
+	calc_vars(&vars, cylinder, ray);
+	if (vars.discriminant < 0)
 		return (0);
-	sqrt_discriminant = sqrt(discriminant);
-	t1 = (-b - sqrt_discriminant) / (2.0 * a);
-	t2 = (-b + sqrt_discriminant) / (2.0 * a);
-	p1 = add(ray->origin, multiply_scalar(ray->direction, t1));
-	height1 = dot(subtract(p1, cylinder->center), axis);
-	p2 = add(ray->origin, multiply_scalar(ray->direction, t2));
-	height2 = dot(subtract(p2, cylinder->center), axis);
-	hit = 0;
-	if (t1 > 0 && fabs(height1) <= cylinder->height / 2)
+	vars.sqrt_discriminant = sqrt(vars.discriminant);
+	vars.t1 = (-vars.b - vars.sqrt_discriminant) / (2.0 * vars.a);
+	vars.t2 = (-vars.b + vars.sqrt_discriminant) / (2.0 * vars.a);
+	vars.p1 = add(ray->origin, multiply_scalar(ray->direction, vars.t1));
+	vars.height1 = dot(subtract(vars.p1, cylinder->center), vars.axis);
+	vars.p2 = add(ray->origin, multiply_scalar(ray->direction, vars.t2));
+	vars.height2 = dot(subtract(vars.p2, cylinder->center), vars.axis);
+	vars.hit = 0;
+	if (vars.t1 > 0 && fabs(vars.height1) <= cylinder->height / 2)
 	{
-		*t = t1;
-		hit = 1;
+		*t = vars.t1;
+		vars.hit = 1;
 	}
-	if (t2 > 0 && fabs(height2) <= cylinder->height / 2 && (!hit || t2 < *t))
+	if (vars.t2 > 0 && fabs(vars.height2) <= cylinder->height / 2
+		&& (!vars.hit || vars.t2 < *t))
 	{
-		*t = t2;
-		hit = 1;
+		*t = vars.t2;
+		vars.hit = 1;
 	}
-	return (hit);
+	return (vars.hit);
 }

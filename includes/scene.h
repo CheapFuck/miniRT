@@ -18,6 +18,28 @@ typedef struct s_light
 	double		radius;
 }	t_light;
 
+typedef struct s_intersect_cylider
+{
+	t_vector	oc;
+	t_vector	axis;
+	double		dot_dir_axis;
+	double		dot_oc_axis;
+	t_vector	d;
+	t_vector	o;
+	double		a;
+	double		b;
+	double		c;
+	double		discriminant;
+	double		sqrt_discriminant;
+	double		t1;
+	double		t2;
+	t_vector	p1;
+	double		height1;
+	t_vector	p2;
+	double		height2;
+	int			hit;
+}	t_intersect_cylinder;
+
 typedef struct s_create_ray
 {
 	t_ray		ray;
