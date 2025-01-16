@@ -3,24 +3,20 @@
 int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
 {
 	t_vector	oc;
-	double		a;
-	double		b;
-	double		c;
 	double		discriminant;
-	double		sqrt_discriminant;
 	double		t1;
 	double		t2;
 
 	oc = subtract(ray->origin, sphere->center);
-	a = dot(ray->direction, ray->direction);
-	b = 2.0 * dot(oc, ray->direction);
-	c = dot(oc, oc) - (sphere->radius * sphere->radius);
-	discriminant = b * b - 4 * a * c;
+	discriminant = pow(dot(oc, ray->direction), 2) - dot(oc, oc)
+			+ sphere->radius * sphere->radius;
 	if (discriminant < 0)
 		return (0);
-	sqrt_discriminant = sqrt(discriminant);
-	t1 = (-b - sqrt_discriminant) / (2.0 * a);
-	t2 = (-b + sqrt_discriminant) / (2.0 * a);
+	discriminant = sqrt(discriminant);
+	t1 = (-dot(oc, ray->direction) - discriminant) / dot(ray->direction,
+		ray->direction);
+	t2 = (-dot(oc, ray->direction) + discriminant) / dot(ray->direction,
+		ray->direction);
 	if (t1 > 0 && t2 > 0)
 		*t = fmin(t1, t2);
 	else if (t1 > 0)
@@ -29,8 +25,10 @@ int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
 		*t = t2;
 	else
 		return (0);
-	return (*t > 0);
+	return (1);
 }
+
+
 
 int	intersect_plane(t_ray *ray, t_plane *plane, double *t)
 {
