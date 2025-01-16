@@ -18,6 +18,18 @@ typedef struct s_light
 	double		radius;
 }	t_light;
 
+typedef struct s_create_ray
+{
+	t_ray		ray;
+	double		aspect_ratio;
+	double		fov_scale;
+	double		norm_x;
+	double		norm_y;
+	t_vector	right;
+	t_vector	up;
+}	t_create_ray;
+
+
 typedef struct s_plane
 {
 	t_vector	point;
@@ -95,6 +107,38 @@ typedef struct s_render_data
 	struct timeval	end_time;
 }	t_render_data;
 
+typedef struct s_cylinder_checkerboard
+{
+	t_vector	local_point;
+	double		height;
+	t_vector	projection;
+	t_vector	radial_vector;
+	double		angle;
+	double		u;
+	double		v;
+	double		scaled_u;
+	double		scaled_v;
+	int			u_check;
+	int			v_check;
+}	t_cylinder_checkerboard;
+
+
+
+
+
+
+typedef struct s_get_refraction_ray
+{
+	t_ray		refraction_ray;
+	double		cos_i;
+	double		eta_i;
+	double		eta_t;
+	double		eta;
+	double		k;
+	t_vector	refracted_dir;
+	double		temp;
+}	t_get_refraction_ray;
+
 typedef struct s_thread_data
 {
 	t_render_data	*render_data;
@@ -103,6 +147,21 @@ typedef struct s_thread_data
 	int				thread_id;
 	int				num_threads;
 }	t_thread_data;
+
+typedef struct s_render_thread
+{
+	t_thread_data	*thread_data;
+	t_render_data	*data;
+	int				x;
+	int				y;
+	int				thread_id;
+	int				num_threads;
+	int				pixel_index;
+	t_ray			ray;
+	t_color			final_color;
+	uint32_t		color;
+	double			elapsed_time;
+}	t_render_thread;
 
 typedef struct s_material_params
 {

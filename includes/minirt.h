@@ -18,7 +18,7 @@
 
 # define WIDTH  1280
 # define HEIGHT 1024
-# define NUM_THREADS 4
+# define NUM_THREADS 2
 # define EPSILON	1e-6
 # define SAMPLES    8
 

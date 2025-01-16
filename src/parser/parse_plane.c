@@ -1,7 +1,7 @@
 #include "../../includes/minirt.h"
 
-void	handle_plane_parse_error(char **tokens, char **split_tokens,
-	const char *error_message)
+static void	handle_plane_parse_error(char **tokens, char **split_tokens,
+	char *error_message)
 {
 	ft_free_split(split_tokens);
 	ft_free_split(tokens);

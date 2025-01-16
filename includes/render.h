@@ -18,9 +18,11 @@ double		compute_shadow_factor(t_vector hit_point, t_light light,
 int			is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
 t_color		get_checkerboard_color(t_vector point, t_cylinder *cylinder,
 				t_color color1, t_color color2, double scale);
-t_color		get_cylinder_checkerboard_color(t_vector point,
-				t_cylinder *cylinder, t_color color1, t_color color2,
-				double scale);
+// t_color		get_cylinder_checkerboard_color(t_vector point,
+// 				t_cylinder *cylinder, t_color color1, t_color color2,
+// 				double scale);
+t_color	get_cylinder_checkerboard_color(t_vector point, t_cylinder *cylinder,
+	double scale);
 int			is_cylinder_checkerboard(t_vector point, t_cylinder *cylinder,
 				double scale);
 void		render_next_row(void *param);
