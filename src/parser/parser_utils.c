@@ -31,7 +31,7 @@ int	validate_nrmlzd_vector(t_vector *vec, char *context)
 		vec->y /= length;
 		vec->z /= length;
 	}
-	if (fabs(length - 1.0) > 1e-6)
+	if (fabs(length - 1.0) > EPSILON)
 	{
 		printf("%s orientation is not normalized!\n", context);
 		return (0);

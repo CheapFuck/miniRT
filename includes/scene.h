@@ -18,6 +18,100 @@ typedef struct s_light
 	double		radius;
 }	t_light;
 
+typedef struct	s_compute_shadow_factor
+{
+	int			unblocked_rays;
+	int			i;
+	t_vector	light_point;
+	t_vector	shadow_ray_dir;
+	double		light_distance;
+	t_ray		shadow_ray;
+	int			in_shadow;
+	int			j;
+	double		t_shadow;
+}	t_compute_shadow_factor;
+
+typedef struct s_in_shadow
+{
+	int			i;
+	t_vector	light_dir;
+	double		light_distance;
+	t_ray		shadow_ray;
+	double		t_shadow;
+}	t_in_shadow;
+
+typedef struct s_apply_lighting
+{
+	int			i;
+	t_color		light_contribution;
+	t_vector	view_dir;
+	t_light		light;
+	double		shadow_factor;
+	t_vector	light_dir;
+	double		diffuse_intensity;
+	t_vector	reflect_dir;
+	double		specular_intensity;
+}	t_apply_lighting;
+
+typedef struct s_disc_checkerboard
+{
+	double		grid_size;
+	t_vector	up;
+	t_vector	x_axis;
+	t_vector	y_axis;
+	double		proj_x;
+	double		proj_y;
+	int			u;
+	int			v;
+}	t_disc_checkerboard;
+
+typedef struct s_plane_checkerboard
+{
+	double		grid_size;
+	t_vector	up;
+	t_vector	x_axis;
+	t_vector	y_axis;
+	double		proj_x;
+	double		proj_y;
+	int			u;
+	int			v;
+}	t_plane_checkerboard;
+
+typedef struct s_checkerboard_horizontal
+{
+	t_vector	local_point;
+	double		height;
+	double		angle;
+	double		grid_size;
+	t_vector	radial;
+	t_vector	up;
+	t_vector	x_axis;
+	t_vector	y_axis;
+	double		proj_x;
+	double		proj_y;
+	double		normalized_angle;
+	int			u;
+	int			v;
+}	t_checkerboard_horizontal;
+
+typedef struct s_checkerboard_vertical
+{
+	t_vector	local_point;
+	double		height;
+	double		angle;
+	double		grid_size;
+	t_vector	radial;
+	t_vector	up;
+	t_vector	x_axis;
+	t_vector	y_axis;
+	double		proj_x;
+	double		proj_y;
+	double		scaled_angle;
+	int			u;
+	int			v;
+}	t_checkerboard_vertical;
+
+
 typedef struct s_intersect_cylider
 {
 	t_vector	oc;
@@ -113,6 +207,7 @@ typedef struct s_scene
 	int			has_ambient;
 	int			has_camera;
 	int			has_light;
+	int			dept;
 }	t_scene;
 
 typedef struct s_render_data

@@ -10,7 +10,7 @@ void	save_image_to_file(const unsigned char *raw_image_data, unsigned width,
 	png_data = NULL;
 	png_size = 0;
 	error = lodepng_encode32(&png_data, &png_size, raw_image_data, width,
-		height);
+			height);
 	if (error)
 	{
 		printf("Error %u: %s\n", error, lodepng_error_text(error));

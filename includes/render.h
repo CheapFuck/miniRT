@@ -9,15 +9,16 @@ void		render_scene(mlx_t *mlx, t_scene *scene);
 int			intersect_sphere(t_ray *ray, t_sphere *sphere, double *t);
 int			intersect_cylinder(t_ray *ray, t_cylinder *cylinder, double *t);
 int			intersect_plane(t_ray *ray, t_plane *plane, double *t);
-t_color		apply_lighting(t_vector hit_point, t_vector normal,
-				t_color object_color, t_scene *scene, int depth);
+t_color	apply_lighting(t_vector hit_point, t_vector normal,
+			t_color object_color, t_scene *scene);
+// t_color		apply_lighting(t_vector hit_point, t_vector normal,
+				// t_color object_color, t_scene *scene, int depth);
 int			is_in_shadow(t_vector hit_point, t_light light, t_scene *scene);
 t_vector	random_point_on_light(t_light light);
 double		compute_shadow_factor(t_vector hit_point, t_light light,
 				t_scene *scene, int num_samples);
 int			is_checkerboard(t_vector point, t_cylinder *cylinder, double scale);
-t_color		get_checkerboard_color(t_vector point, t_cylinder *cylinder,
-				t_color color1, t_color color2, double scale);
+t_color		get_checkerboard_color(t_vector point, t_cylinder *cylinder, double scale);
 // t_color		get_cylinder_checkerboard_color(t_vector point,
 // 				t_cylinder *cylinder, t_color color1, t_color color2,
 // 				double scale);
@@ -55,10 +56,10 @@ t_vector	scale_vector(t_vector v, double s);
 double		length_squared(t_vector v);
 void		parse_discs(char *line, t_scene *scene);
 t_color		combine_color(t_color light_color, t_color object_color);
-t_color		get_plane_checkerboard_color(t_vector point, t_color color1,
-				t_color color2, t_vector normal, double scale);
-t_color		get_disc_checkerboard_color(t_vector point, t_disc *disc,
-				t_color color1, t_color color2, double scale);
+t_color		get_plane_checkerboard_color(t_vector point, t_vector normal, double scale);
+t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc, double scale);
+// t_color		get_disc_checkerboard_color(t_vector point, t_disc *disc,
+// 				t_color color1, t_color color2, double scale);
 int			intersect_plane_ray(t_ray *ray, t_plane *plane, double *t_plane);
 int			intersect_disc_ray(t_ray *ray, t_disc *disc, double *t_disc);
 int			intersect_cylinder_ray(t_ray *ray, t_cylinder *cylinder,

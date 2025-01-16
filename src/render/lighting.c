@@ -14,47 +14,46 @@ t_vector	random_point_on_light(t_light light)
 	return (random_point);
 }
 
+static void	calc_shadow_vars(t_compute_shadow_factor *vars, t_light light,
+	t_vector hit_point)
+{
+	vars->light_point = random_point_on_light(light);
+	vars->shadow_ray_dir = normalize(subtract(vars->light_point, hit_point));
+	vars->light_distance = sqrt(dot(subtract(vars->light_point, hit_point),
+				subtract(vars->light_point, hit_point)));
+	vars->shadow_ray.origin = add(hit_point,
+			multiply_scalar(vars->shadow_ray_dir, EPSILON));
+	vars->shadow_ray.direction = vars->shadow_ray_dir;
+	vars->in_shadow = 0;
+	vars->j = 0;
+}
+
 double	compute_shadow_factor(t_vector hit_point, t_light light,
 	t_scene *scene, int num_samples)
 {
-	int			unblocked_rays;
-	int			i;
-	t_vector	light_point;
-	t_vector	shadow_ray_dir;
-	double		light_distance;
-	t_ray		shadow_ray;
-	int			in_shadow;
-	int			j;
-	double		t_shadow;
+	t_compute_shadow_factor	vars;
 
-	unblocked_rays = 0;
-	i = 0;
-	while (i < num_samples)
+	vars.unblocked_rays = 0;
+	vars.i = 0;
+	while (vars.i < num_samples)
 	{
-		light_point = random_point_on_light(light);
-		shadow_ray_dir = normalize(subtract(light_point, hit_point));
-		light_distance = sqrt(dot(subtract(light_point, hit_point),
-					subtract(light_point, hit_point)));
-		shadow_ray.origin = add(hit_point, multiply_scalar(shadow_ray_dir,
-					1e-4));  //check this
-		shadow_ray.direction = shadow_ray_dir;
-		in_shadow = 0;
-		j = 0;
-		while (j < scene->num_spheres)
+		calc_shadow_vars(&vars, light, hit_point);
+		while (vars.j < scene->num_spheres)
 		{
-			if (intersect_sphere(&shadow_ray, &scene->spheres[j], &t_shadow)
-				&& t_shadow < light_distance)
+			if (intersect_sphere(&vars.shadow_ray, &scene->spheres[vars.j],
+					&vars.t_shadow)
+				&& vars.t_shadow < vars.light_distance)
 			{
-				in_shadow = 1;
+				vars.in_shadow = 1;
 				break ;
 			}
-			j++;
+			vars.j++;
 		}
-		if (!in_shadow)
-			unblocked_rays++;
-		i++;
+		if (!vars.in_shadow)
+			vars.unblocked_rays++;
+		vars.i++;
 	}
-	return ((double)unblocked_rays / num_samples);
+	return ((double)vars.unblocked_rays / num_samples);
 }
 
 int	is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
@@ -68,233 +67,194 @@ int	is_checkerboard(t_vector point, t_cylinder *cylinder, double scale)
 int	is_checkerboard_horizontal(t_vector point, t_cylinder *cylinder,
 	double scale)
 {
-	t_vector	local_point;
-	double		height;
-	double		angle;
-	double		grid_size;
-	t_vector	radial;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	double		normalized_angle;
-	int			u;
-	int			v;
+	t_checkerboard_horizontal	vars;
 
-	grid_size = scale;
-	local_point = subtract(point, cylinder->center);
-	height = dot(local_point, cylinder->orientation);
-	radial = subtract(local_point,
-			multiply_scalar(cylinder->orientation, height));
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, cylinder->orientation)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, cylinder->orientation));
-	y_axis = normalize(cross(cylinder->orientation, x_axis));
-	proj_x = dot(radial, x_axis);
-	proj_y = dot(radial, y_axis);
-	angle = atan2(proj_y, proj_x);
-	normalized_angle = (angle + M_PI) / (2 * M_PI);
-	u = (int)floor(height / grid_size);
-	v = (int)floor(normalized_angle * (2 * M_PI * cylinder->radius)
-			/ grid_size);
-	return ((u + v) % 2);
+	vars.grid_size = scale;
+	vars.local_point = subtract(point, cylinder->center);
+	vars.height = dot(vars.local_point, cylinder->orientation);
+	vars.radial = subtract(vars.local_point,
+			multiply_scalar(cylinder->orientation, vars.height));
+	vars.up = (t_vector){0, 1, 0};
+	if (fabs(dot(vars.up, cylinder->orientation)) > 0.99)
+		vars.up = (t_vector){1, 0, 0};
+	vars.x_axis = normalize(cross(vars.up, cylinder->orientation));
+	vars.y_axis = normalize(cross(cylinder->orientation, vars.x_axis));
+	vars.proj_x = dot(vars.radial, vars.x_axis);
+	vars.proj_y = dot(vars.radial, vars.y_axis);
+	vars.angle = atan2(vars.proj_y, vars.proj_x);
+	vars.normalized_angle = (vars.angle + M_PI) / (2 * M_PI);
+	vars.u = (int)floor(vars.height / vars.grid_size);
+	vars.v = (int)floor(vars.normalized_angle * (2 * M_PI * cylinder->radius)
+			/ vars.grid_size);
+	return ((vars.u + vars.v) % 2);
 }
 
 int	is_checkerboard_vertical(t_vector point, t_cylinder *cylinder, double scale)
 {
-	t_vector	local_point;
-	double		height;
-	double		angle;
-	double		grid_size;
-	t_vector	radial;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	double		scaled_angle;
-	int			u;
-	int			v;
+	t_checkerboard_vertical	vars;
 
-	grid_size = scale;
-	local_point = subtract(point, cylinder->center);
-	height = dot(local_point, cylinder->orientation);
-	radial = subtract(local_point,
-			multiply_scalar(cylinder->orientation, height));
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, cylinder->orientation)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, cylinder->orientation));
-	y_axis = normalize(cross(cylinder->orientation, x_axis));
-	proj_x = dot(radial, x_axis);
-	proj_y = dot(radial, y_axis);
-	angle = atan2(proj_y, proj_x);
-	if (angle < 0)
-		angle += 2 * M_PI;
-	scaled_angle = angle * (cylinder->radius / grid_size);
-	u = (int)floor(height / grid_size);
-	v = (int)floor(scaled_angle);
-	return ((u + v) % 2);
+	vars.grid_size = scale;
+	vars.local_point = subtract(point, cylinder->center);
+	vars.height = dot(vars.local_point, cylinder->orientation);
+	vars.radial = subtract(vars.local_point,
+			multiply_scalar(cylinder->orientation, vars.height));
+	vars.up = (t_vector){0, 1, 0};
+	if (fabs(dot(vars.up, cylinder->orientation)) > 0.99)
+		vars.up = (t_vector){1, 0, 0};
+	vars.x_axis = normalize(cross(vars.up, cylinder->orientation));
+	vars.y_axis = normalize(cross(cylinder->orientation, vars.x_axis));
+	vars.proj_x = dot(vars.radial, vars.x_axis);
+	vars.proj_y = dot(vars.radial, vars.y_axis);
+	vars.angle = atan2(vars.proj_y, vars.proj_x);
+	if (vars.angle < 0)
+		vars.angle += 2 * M_PI;
+	vars.scaled_angle = vars.angle * (cylinder->radius / vars.grid_size);
+	vars.u = (int)floor(vars.height / vars.grid_size);
+	vars.v = (int)floor(vars.scaled_angle);
+	return ((vars.u + vars.v) % 2);
 }
 
 int	is_plane_checkerboard(t_vector point, t_vector plane_normal, double scale)
 {
-	double		grid_size;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	int			u;
-	int			v;
+	t_plane_checkerboard	vars;
 
-	grid_size = scale;
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, plane_normal)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, plane_normal));
-	y_axis = normalize(cross(plane_normal, x_axis));
-	proj_x = dot(point, x_axis);
-	proj_y = dot(point, y_axis);
-	u = (int)floor(proj_x / grid_size);
-	v = (int)floor(proj_y / grid_size);
-	return ((u + v) % 2);
+	vars.grid_size = scale;
+	vars.up = (t_vector){0, 1, 0};
+	if (fabs(dot(vars.up, plane_normal)) > 0.99)
+		vars.up = (t_vector){1, 0, 0};
+	vars.x_axis = normalize(cross(vars.up, plane_normal));
+	vars.y_axis = normalize(cross(plane_normal, vars.x_axis));
+	vars.proj_x = dot(point, vars.x_axis);
+	vars.proj_y = dot(point, vars.y_axis);
+	vars.u = (int)floor(vars.proj_x / vars.grid_size);
+	vars.v = (int)floor(vars.proj_y / vars.grid_size);
+	return ((vars.u + vars.v) % 2);
 }
 
-t_color	get_plane_checkerboard_color(t_vector point, t_color color1,
-	t_color color2, t_vector normal, double scale)
+t_color	get_plane_checkerboard_color(t_vector point, t_vector normal,
+	double scale)
 {
 	if (is_plane_checkerboard(point, normal, scale))
-		return (color1);
-	return (color2);
+		return ((t_color){255, 255, 255});
+	return ((t_color){0, 0, 0});
 }
 
 int	is_disc_checkerboard(t_vector point, t_disc *disc, double scale)
 {
-	double		grid_size;
-	t_vector	up;
-	t_vector	x_axis;
-	t_vector	y_axis;
-	double		proj_x;
-	double		proj_y;
-	int			u;
-	int			v;
+	t_disc_checkerboard	vars;
 
-	grid_size = scale;
-	up = (t_vector){0, 1, 0};
-	if (fabs(dot(up, disc->normal)) > 0.99)
-		up = (t_vector){1, 0, 0};
-	x_axis = normalize(cross(up, disc->normal));
-	y_axis = normalize(cross(disc->normal, x_axis));
-	proj_x = dot(point, x_axis);
-	proj_y = dot(point, y_axis);
-	u = (int)floor(proj_x / grid_size);
-	v = (int)floor(proj_y / grid_size);
-	return ((u + v) % 2);
+	vars.grid_size = scale;
+	vars.up = (t_vector){0, 1, 0};
+	if (fabs(dot(vars.up, disc->normal)) > 0.99)
+		vars.up = (t_vector){1, 0, 0};
+	vars.x_axis = normalize(cross(vars.up, disc->normal));
+	vars.y_axis = normalize(cross(disc->normal, vars.x_axis));
+	vars.proj_x = dot(point, vars.x_axis);
+	vars.proj_y = dot(point, vars.y_axis);
+	vars.u = (int)floor(vars.proj_x / vars.grid_size);
+	vars.v = (int)floor(vars.proj_y / vars.grid_size);
+	return ((vars.u + vars.v) % 2);
 }
 
-t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc,
-	t_color color1, t_color color2, double scale)
+t_color	get_disc_checkerboard_color(t_vector point, t_disc *disc, double scale)
 {
 	if (is_disc_checkerboard(point, disc, scale))
-		return (color1);
-	return (color2);
+		return ((t_color){255, 255, 255});
+	return ((t_color){0, 0, 0});
 }
 
 t_color	get_checkerboard_color(t_vector point, t_cylinder *cylinder,
-	t_color color1, t_color color2, double scale)
+	double scale)
 {
 	if (is_checkerboard(point, cylinder, scale))
-		return (color1);
-	return (color2);
+		return ((t_color){255, 255, 255});
+	return ((t_color){0, 0, 0});
+}
+
+static void	calc_in_shadow_vars(t_in_shadow *vars, t_light light,
+t_vector hit_point)
+{
+	vars->light_dir = normalize(subtract(light.pos, hit_point));
+	vars->light_distance = sqrt(dot(subtract(light.pos, hit_point),
+				subtract(light.pos, hit_point)));
+	vars->shadow_ray.origin = add(hit_point, multiply_scalar(vars->light_dir,
+				EPSILON));
+	vars->shadow_ray.direction = vars->light_dir;
+	vars->i = 0;
 }
 
 int	is_in_shadow(t_vector hit_point, t_light light, t_scene *scene)
 {
-	int			i;
-	t_vector	light_dir;
-	double		light_distance;
-	t_ray		shadow_ray;
-	double		t_shadow;
+	t_in_shadow	vars;
 
-	light_dir = normalize(subtract(light.pos, hit_point));
-	light_distance = sqrt(dot(subtract(light.pos, hit_point),
-				subtract(light.pos, hit_point)));
-	shadow_ray.origin = add(hit_point, multiply_scalar(light_dir, 1e-4));
-	shadow_ray.direction = light_dir;
-	i = 0;
-	while (i < scene->num_spheres)
+	calc_in_shadow_vars(&vars, light, hit_point);
+	while (vars.i < scene->num_spheres)
 	{
-		if (intersect_sphere(&shadow_ray, &scene->spheres[i], &t_shadow)
-			&& t_shadow < light_distance)
+		if (intersect_sphere(&vars.shadow_ray, &scene->spheres[vars.i],
+				&vars.t_shadow) && vars.t_shadow < vars.light_distance)
 			return (1);
-		i++;
+		vars.i++;
 	}
-	i = 0;
-	while (i < scene->num_cylinders)
+	vars.i = 0;
+	while (vars.i < scene->num_cylinders)
 	{
-		if (intersect_cylinder(&shadow_ray, &scene->cylinders[i], &t_shadow)
-			&& t_shadow < light_distance)
+		if (intersect_cylinder(&vars.shadow_ray, &scene->cylinders[vars.i],
+				&vars.t_shadow) && vars.t_shadow < vars.light_distance)
 			return (1);
-		i++;
+		vars.i++;
 	}
-	i = 0;
-	while (i < scene->num_planes)
-	{
-		if (intersect_plane(&shadow_ray, &scene->planes[i], &t_shadow)
-			&& t_shadow < light_distance)
+	while (vars.i < scene->num_planes)
+		if (intersect_plane(&vars.shadow_ray, &scene->planes[vars.i],
+				&vars.t_shadow) && vars.t_shadow < vars.light_distance)
 			return (1);
-		i++;
-	}
+	vars.i++;
 	return (0);
 }
 
-t_color	apply_lighting(t_vector hit_point, t_vector normal,
-	t_color object_color, t_scene *scene, int depth)
+static void	apply_lighting_loop(t_apply_lighting *vars, t_scene *scene,
+	t_vector hit_point, t_vector normal)
 {
-	int			i;
-	t_color		light_contribution;
-	t_vector	view_dir;
-	t_light		light;
-	double		shadow_factor;
-	t_vector	light_dir;
-	double		diffuse_intensity;
-	t_vector	reflect_dir;
-	double		specular_intensity;
-
-	if (depth > MAX_REFLECTION_DEPTH)
-		return ((t_color){0, 0, 0});
-	light_contribution = (t_color){0, 0, 0};
-	light_contribution.r += 255 * scene->ambient.ratio;
-	light_contribution.g += 255 * scene->ambient.ratio;
-	light_contribution.b += 255 * scene->ambient.ratio;
-	view_dir = normalize(subtract(scene->camera.pos, hit_point));
-	i = 0;
-	while (i < scene->num_lights)
+	while (vars->i < scene->num_lights)
 	{
-		light = scene->lights[i];
-		shadow_factor = compute_shadow_factor(hit_point, light, scene, 8);
-		if (shadow_factor > 0)
+		vars->light = scene->lights[vars->i];
+		vars->shadow_factor = compute_shadow_factor(hit_point, vars->light,
+				scene, 8);
+		if (vars->shadow_factor > 0)
 		{
-			light_dir = normalize(subtract(light.pos, hit_point));
-			diffuse_intensity = fmax(0.0, dot(normal, light_dir))
-				* light.brightness * shadow_factor;
-			reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0
-							* dot(normal, light_dir)), light_dir));
-			specular_intensity = pow(fmax(0.0, dot(reflect_dir, view_dir)), 50)
-				* light.brightness * shadow_factor * 1;
-			light_contribution.r += light.color.r * (diffuse_intensity
-					+ specular_intensity);
-			light_contribution.g += light.color.g * (diffuse_intensity
-					+ specular_intensity);
-			light_contribution.b += light.color.b * (diffuse_intensity
-					+ specular_intensity);
+			vars->light_dir = normalize(subtract(vars->light.pos, hit_point));
+			vars->diffuse_intensity = fmax(0.0, dot(normal, vars->light_dir))
+				* vars->light.brightness * vars->shadow_factor;
+			vars->reflect_dir = normalize(subtract(multiply_scalar(normal, 2.0
+							* dot(normal, vars->light_dir)), vars->light_dir));
+			vars->specular_intensity = pow(fmax(0.0, dot(vars->reflect_dir,
+							vars->view_dir)), 50) * vars->light.brightness
+				* vars->shadow_factor * 1;
+			vars->light_contribution.r += vars->light.color.r
+				* (vars->diffuse_intensity + vars->specular_intensity);
+			vars->light_contribution.g += vars->light.color.g
+				* (vars->diffuse_intensity + vars->specular_intensity);
+			vars->light_contribution.b += vars->light.color.b
+				* (vars->diffuse_intensity + vars->specular_intensity);
 		}
-		i++;
+		vars->i++;
 	}
-	return (combine_color(light_contribution, object_color));
+}
+
+t_color	apply_lighting(t_vector hit_point, t_vector normal,
+	t_color object_color, t_scene *scene)
+{
+	t_apply_lighting	vars;
+
+	if (scene->dept > MAX_REFLECTION_DEPTH)
+		return ((t_color){0, 0, 0});
+	vars.light_contribution = (t_color){0, 0, 0};
+	vars.light_contribution.r += 255 * scene->ambient.ratio;
+	vars.light_contribution.g += 255 * scene->ambient.ratio;
+	vars.light_contribution.b += 255 * scene->ambient.ratio;
+	vars.view_dir = normalize(subtract(scene->camera.pos, hit_point));
+	vars.i = 0;
+	apply_lighting_loop(&vars, scene, hit_point, normal);
+	return (combine_color(vars.light_contribution, object_color));
 }
 
 t_vector	compute_reflection(t_vector light_dir, t_vector normal)
