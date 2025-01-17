@@ -331,6 +331,7 @@ t_color	calculate_object_color(t_hit_record *hit, t_ray ray,
 	t_color				final_color;
 	t_material_params	params;
 
+	normal = (t_vector){0, 0, 0};
 	get_hit_normal(hit, ray, &normal, scene);
 	final_color = get_surface_color(hit, normal, scene, depth);
 	if (hit->material.reflectivity > 0.0 || hit->material.transparency > 0.0)

@@ -39,6 +39,7 @@ int	main(int argc, char **argv)
 	mlx_t	*mlx;
 	t_scene	scene;
 
+	scene = (t_scene){0};
 	if (argc != 2)
 		exit_with_error("Usage: ./miniRT <scene.rt>");
 	init_scene(&scene);
