@@ -145,6 +145,7 @@ void	parse_cylinder(char *line, t_scene *scene)
 	t_cylinder	cylinder;
 	char		**tokens;
 
+	cylinder = (t_cylinder){0};
 	tokens = ft_split(line, ' ');
 	if (!tokens || ft_arraylen(tokens) != 10)
 		return (parse("Error: Invalid cylinder format", tokens));
@@ -158,9 +159,8 @@ void	parse_cylinder(char *line, t_scene *scene)
 	cylinder.height = ft_atof(tokens[4]);
 	if (cylinder.height <= 0)
 		return (parse("Error: Cylinder height must be positive", tokens));
-	if (!parse_color(tokens[5], &cylinder.material.color))
-		return (ft_free_split(tokens));
-	if (!validate_color(&cylinder.material.color))
+	if (!parse_color(tokens[5], &cylinder.material.color)
+		|| !validate_color(&cylinder.material.color))
 		return (ft_free_split(tokens));
 	parse_cylinder_material(&cylinder, tokens);
 	if (scene->num_cylinders >= 65536)
@@ -197,7 +197,7 @@ void	parse_discs(char *line, t_scene *scene)
 	t_disc	disc;
 	char	**tokens;
 
-	// disc = (t_disc){0};
+	disc = (t_disc){0};
 	tokens = ft_split(line, ' ');
 	if (!tokens || ft_arraylen(tokens) < 6)
 		return (parse("Error: Invalid cylinder format for discs", tokens));

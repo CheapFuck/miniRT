@@ -1,6 +1,5 @@
 #include "../../includes/minirt.h"
 
-// Validation functions for different types of inputs
 int	validate_ratio(double value, const char *element_name)
 {
 	if (value < 0.0 || value > 1.0)

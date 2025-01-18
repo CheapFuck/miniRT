@@ -73,7 +73,7 @@ void	parse_plane(char *line, t_scene *scene)
 	if (!validate_nrmlzd_vector(&plane.normal, "Plane normal"))
 		return (ft_free_split(tokens));
 	if (!parse_plane_vector(tokens[2], &plane.normal, tokens)
-			|| !parse_plane_color(tokens[3], &plane.material.color, tokens))
+		|| !parse_plane_color(tokens[3], &plane.material.color, tokens))
 		return ;
 	if (!validate_color(&plane.material.color))
 		return (ft_free_split(tokens));

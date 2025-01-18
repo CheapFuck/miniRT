@@ -108,17 +108,3 @@ void	parse_file(const char *filename, t_scene *scene)
 	free(line);
 	close(fd);
 }
-
-// void	parse_file(const char *filename, t_scene *scene)
-// {
-// 	int		fd;
-// 	char	*line;
-
-// 	open_file(filename, &fd);
-// 	while ((line = get_next_line_from_file(fd)) != NULL)
-// 	{
-// 		parse_scene_element(line, scene);
-// 		free(line);
-// 	}
-// 	close(fd);
-// }

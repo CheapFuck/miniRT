@@ -1,10 +1,5 @@
 #include "../includes/minirt.h"
 
-// static void close_window(mlx_t *mlx)
-// {
-//     if (mlx) mlx_terminate(mlx);
-//     exit(0);
-// }
 static void	init_scene(t_scene *scene)
 {
 	scene->num_spheres = 0;
