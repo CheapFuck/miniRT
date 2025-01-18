@@ -88,6 +88,7 @@ char	*read_line(int fd, char *temp)
 		return (free(temp), NULL);
 	return (temp);
 }
+
 char	*get_next_line(int fd)
 {
 	static char	*temp[OPEN_MAX];

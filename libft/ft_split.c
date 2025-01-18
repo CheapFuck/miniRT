@@ -27,7 +27,7 @@ int	num_strings(char const*string, char c)
 		if (string[i])
 		{
 			while (string[i] && string[i] != c)
-			i++;
+				i++;
 			j++;
 		}
 	}
