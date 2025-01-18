@@ -62,6 +62,7 @@ void	parse_plane(char *line, t_scene *scene)
 	char	**tokens;
 	t_plane	plane;
 
+	plane = (t_plane){0};
 	tokens = ft_split(line, ' ');
 	if (!tokens || ft_arraylen(tokens) != 8)
 		handle_plane_parse_error(tokens, NULL, "Invalid plane format");
@@ -71,9 +72,8 @@ void	parse_plane(char *line, t_scene *scene)
 		handle_plane_parse_error(tokens, NULL, "Invalid plane normal format");
 	if (!validate_nrmlzd_vector(&plane.normal, "Plane normal"))
 		return (ft_free_split(tokens));
-	if (!parse_plane_vector(tokens[2], &plane.normal, tokens))
-		return ;
-	if (!parse_plane_color(tokens[3], &plane.material.color, tokens))
+	if (!parse_plane_vector(tokens[2], &plane.normal, tokens)
+			|| !parse_plane_color(tokens[3], &plane.material.color, tokens))
 		return ;
 	if (!validate_color(&plane.material.color))
 		return (ft_free_split(tokens));

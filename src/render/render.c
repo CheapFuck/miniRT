@@ -543,6 +543,7 @@ void	*render_thread(void *arg)
 {
 	t_render_thread	vars;
 
+	vars = (t_render_thread){0};
 	vars.thread_data = (t_thread_data *)arg;
 	vars.data = vars.thread_data->render_data;
 	vars.thread_id = vars.thread_data->thread_id;
