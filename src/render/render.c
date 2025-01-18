@@ -162,6 +162,7 @@ t_hit_record	find_closest_intersection(t_ray ray, t_scene *scene)
 {
 	t_hit_record	hit;
 
+	hit = (t_hit_record){0};
 	hit.index = -1;
 	hit.t = INFINITY;
 	hit.hit = 0;
@@ -283,12 +284,8 @@ static t_color	get_surface_color_cylinder(t_scene *scene, t_hit_record *hit)
 static t_color	get_surface_color_plane(t_scene *scene, t_hit_record *hit,
 	t_vector normal)
 {
-	t_color	black;
-	t_color	white;
 	t_plane	*plane;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
 	plane = &scene->planes[hit->index];
 	if (plane->material.checker == 1)
 		return (get_plane_checkerboard_color(hit->point, normal, 0.5));
@@ -298,12 +295,8 @@ static t_color	get_surface_color_plane(t_scene *scene, t_hit_record *hit,
 
 static t_color	get_surface_color_disc(t_scene *scene, t_hit_record *hit)
 {
-	t_color	black;
-	t_color	white;
 	t_disc	*disc;
 
-	black = (t_color){255, 255, 255};
-	white = (t_color){0, 0, 0};
 	disc = &scene->discs[hit->index];
 	if (disc->material.checker == 1)
 		return (get_disc_checkerboard_color(hit->point, disc, 0.5));
@@ -315,11 +308,9 @@ t_color	get_surface_color(t_hit_record *hit, t_vector normal,
 	t_scene *scene, int depth)
 {
 	t_color	black;
-	t_color	white;
 	t_color	object_color;
 
 	scene->dept = depth;
-	white = (t_color){255, 255, 255};
 	black = (t_color){0, 0, 0};
 	object_color = black;
 	if (hit->type == SPHERE)
@@ -340,6 +331,7 @@ t_color	calculate_object_color(t_hit_record *hit, t_ray ray,
 	t_color				final_color;
 	t_material_params	params;
 
+	normal = (t_vector){0, 0, 0};
 	get_hit_normal(hit, ray, &normal, scene);
 	final_color = get_surface_color(hit, normal, scene, depth);
 	if (hit->material.reflectivity > 0.0 || hit->material.transparency > 0.0)

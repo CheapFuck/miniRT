@@ -18,7 +18,7 @@ typedef struct s_light
 	double		radius;
 }	t_light;
 
-typedef struct	s_compute_shadow_factor
+typedef struct s_compute_shadow_factor
 {
 	int			unblocked_rays;
 	int			i;
@@ -111,7 +111,6 @@ typedef struct s_checkerboard_vertical
 	int			v;
 }	t_checkerboard_vertical;
 
-
 typedef struct s_intersect_cylider
 {
 	t_vector	oc;
@@ -144,7 +143,6 @@ typedef struct s_create_ray
 	t_vector	right;
 	t_vector	up;
 }	t_create_ray;
-
 
 typedef struct s_plane
 {
@@ -238,11 +236,6 @@ typedef struct s_cylinder_checkerboard
 	int			u_check;
 	int			v_check;
 }	t_cylinder_checkerboard;
-
-
-
-
-
 
 typedef struct s_get_refraction_ray
 {

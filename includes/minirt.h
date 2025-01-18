@@ -16,9 +16,9 @@
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
 
-# define WIDTH  1280
-# define HEIGHT 1024
-# define NUM_THREADS 2
+# define WIDTH  640
+# define HEIGHT 480
+# define NUM_THREADS 1
 # define EPSILON	1e-6
 # define SAMPLES    8
 
