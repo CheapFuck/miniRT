@@ -197,6 +197,7 @@ void	parse_discs(char *line, t_scene *scene)
 	t_disc	disc;
 	char	**tokens;
 
+	// disc = (t_disc){0};
 	tokens = ft_split(line, ' ');
 	if (!tokens || ft_arraylen(tokens) < 6)
 		return (parse("Error: Invalid cylinder format for discs", tokens));
