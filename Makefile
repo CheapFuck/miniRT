@@ -43,7 +43,10 @@ all: libmlx $(NAME)
 
 
 libmlx:
-	@cmake $(LIBMLX) -B $(LIBMLX)/build && make -C $(LIBMLX)/build -j4
+	@if [ ! -d "$(MLX_DIR)" ]; then \
+		git clone https://github.com/codam-coding-college/MLX42.git; \
+	fi
+	cmake $(LIBMLX) -B $(LIBMLX)/build && make -C $(LIBMLX)/build
 
 $(NAME): $(OBJ)
 	$(MAKE) -C $(LIBFTDIR)
