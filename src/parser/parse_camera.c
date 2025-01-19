@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   parse_camera.c                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:15:04 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:15:06 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minirt.h"
 
 static void	parse_camera_position_and_orientation(char *line, t_scene *scene)

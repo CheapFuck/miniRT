@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   intersection.c                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:56:11 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:56:12 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minirt.h"
 
 int	intersect_sphere(t_ray *ray, t_sphere *sphere, double *t)
@@ -43,16 +55,6 @@ int	intersect_plane(t_ray *ray, t_plane *plane, double *t)
 		return (0);
 	*t = t_temp;
 	return (1);
-}
-
-t_vector	scale_vector(t_vector v, double s)
-{
-	t_vector	result;
-
-	result.x = v.x * s;
-	result.y = v.y * s;
-	result.z = v.z * s;
-	return (result);
 }
 
 int	intersect_disc(t_ray *ray, t_disc *disc, double *t)

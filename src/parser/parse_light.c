@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   parse_light.c                                      :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:55:50 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:55:50 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minirt.h"
 
 int	parse_light_position(char **tokens, t_light *light)

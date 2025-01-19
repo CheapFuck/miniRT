@@ -9,15 +9,29 @@ INCLUDE		:=	-L libft -lft
 
 
 SRC = src/main.c \
-      src/render/render.c \
+      src/render/render1.c \
+	  src/render/render2.c \
+	  src/render/render3.c \
+	  src/render/render4.c \
+	  src/render/render5.c \
+	  src/render/render6.c \
+	  src/render/render7.c \
+	  src/render/render8.c \
+	  src/render/render9.c \
       src/render/intersection.c \
-      src/render/lighting.c \
-      src/utils.c \
+      src/render/lighting1.c \
+      src/render/lighting2.c \
+      src/render/lighting3.c \
+	  src/utils1.c \
+ 	  src/utils2.c \
 	  src/parser/parse_camera.c \
-	  src/parser/parse_file.c \
+	  src/parser/parse_file1.c \
+	  src/parser/parse_file2.c \
 	  src/parser/parse_light.c \
   	  src/parser/parse_plane.c \
-	  src/parser/parse_cylinder.c \
+	  src/parser/parse_cylinder1.c \
+  	  src/parser/parse_cylinder2.c \
+	  src/parser/parse_cylinder3.c \
   	  src/parser/parse_sphere.c \
 	  src/render/safe2file.c \
 	  MLX42/lib/png/lodepng.c \
@@ -41,5 +55,8 @@ clean:
 	rm -rf $(LIBMLX)/build
 
 fclean: clean
+	$(MAKE) -C $(LIBFTDIR) fclean
+	rm -rf miniRT
+	rm -rf MLX42/
 
 re: fclean all

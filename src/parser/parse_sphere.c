@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   parse_sphere.c                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:55:59 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:56:00 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minirt.h"
 
 static void	parse_sphere_material(t_sphere *sphere, char **tokens,
@@ -66,4 +78,14 @@ void	parse_sphere(char *line, t_scene *scene)
 		exit(EXIT_FAILURE);
 	}
 	sphere_parse(tokens, pos, sphere, scene);
+}
+
+int	validate_ratio(double value, const char *element_name)
+{
+	if (value < 0.0 || value > 1.0)
+	{
+		printf("Error: %s ratio must be between 0.0 and 1.0\n", element_name);
+		return (0);
+	}
+	return (1);
 }

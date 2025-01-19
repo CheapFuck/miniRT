@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   minirt.h                                           :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:58:01 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:58:02 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef MINIRT_H
 # define MINIRT_H
 
@@ -12,7 +24,6 @@
 # include <sys/time.h>
 # include "scene.h"
 # include "objects.h"
-# include "parser.h"
 # include "render.h"
 # include "../MLX42/include/lodepng/lodepng.h"
 
@@ -22,9 +33,5 @@
 # define EPSILON	1e-6
 # define SAMPLES    8
 # define MAX_REFLECTION_DEPTH 16
-
-void	render_scene(mlx_t *mlx, t_scene *scene);
-int		main(int argc, char **argv);
-void	ft_hook(void *param);
 
 #endif // MINIRT_H

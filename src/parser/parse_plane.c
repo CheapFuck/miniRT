@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   parse_plane.c                                      :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:55:54 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:55:55 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../includes/minirt.h"
 
 static void	handle_plane_parse_error(char **tokens, char **split_tokens,

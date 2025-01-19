@@ -1,14 +1,16 @@
-#include "../../includes/minirt.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   parser_utils.c                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: thivan-d <thivan-d@student.codam.nl>         +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2025/01/19 16:56:04 by thivan-d      #+#    #+#                 */
+/*   Updated: 2025/01/19 16:56:05 by thivan-d      ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
 
-int	validate_ratio(double value, const char *element_name)
-{
-	if (value < 0.0 || value > 1.0)
-	{
-		printf("Error: %s ratio must be between 0.0 and 1.0\n", element_name);
-		return (0);
-	}
-	return (1);
-}
+#include "../../includes/minirt.h"
 
 int	validate_color(t_color *color)
 {
