@@ -3,8 +3,6 @@
 
 # include "minirt.h"
 
-# define MAX_REFLECTION_DEPTH 16
-
 void		render_scene(mlx_t *mlx, t_scene *scene);
 int			intersect_sphere(t_ray *ray, t_sphere *sphere, double *t);
 int			intersect_cylinder(t_ray *ray, t_cylinder *cylinder, double *t);
@@ -36,8 +34,6 @@ t_color		trace_ray(t_ray ray, t_scene *scene, int depth);
 t_color		blend_colors(t_color color1, t_color color2, float ratio);
 t_vector	refract_ray(t_vector I, t_vector N, float n1, float n2);
 t_vector	refract(t_vector incident, t_vector normal, float eta_ratio);
-// t_color		calculate_transparency(t_vector hit_point, t_vector normal,
-// 				t_ray ray, t_scene *scene, float transparency, float ior);
 t_ray		get_reflection_ray(t_vector hit_point, t_vector normal,
 				t_ray incident_ray);
 t_vector	reflect(t_vector direction, t_vector normal);
@@ -74,5 +70,38 @@ void		check_plane_intersections(t_ray ray, t_scene *scene,
 t_color		calculate_object_color(t_hit_record *hit, t_ray ray,
 				t_scene *scene, int depth);
 t_color		apply_material_effects(t_material_params params);
+void	render_scene(mlx_t *mlx, t_scene *scene);
+int		main(int argc, char **argv);
+void	ft_hook(void *param);
 
+void		parse_file(const char *filename, t_scene *scene);
+void		parse_ambient(char *line, t_scene *scene);
+void		parse_camera(char *line, t_scene *scene);
+void		parse_light(char *line, t_scene *scene);
+void		parse_sphere(char *line, t_scene *scene);
+void		parse_plane(char *line, t_scene *scene);
+void		parse_cylinder(char *line, t_scene *scene);
+int			parse_disc_properties(char **tokens, t_disc *disc);
+char		**split_and_validate(char *str, int expected_parts);
+void		handle_parse_error(char **tokens, const char *error_message);
+int			normalize_orientation_disc(t_disc *disc);
+int			parse_color(char *color_str, t_color *color);
+t_vector	parse_vector(const char *str);
+double		parse_double(const char *str);
+int			parse_int(const char *str);
+// void		exit_with_error(const char *msg);
+void		exit_with_error(char *msg);
+void		save_image_to_file(const unsigned char *raw_image_data,
+				unsigned width, unsigned height, const char *filename);
+int			validate_ratio(double value, const char *element_name);
+int			validate_color(t_color *color);
+int			validate_nrmlzd_vector(t_vector *vec, char *context);
+int			validate_fov(int fov);
+int			validate_unique_element(t_scene *scene, char type);
+int			is_valid_number(const char *str);
+t_vector	subtract(t_vector a, t_vector b);
+double		dot(t_vector a, t_vector b);
+t_vector	normalize(t_vector v);
+t_vector	multiply_scalar(t_vector v, double scalar);
+t_vector	add(t_vector a, t_vector b);
 #endif // RENDER_H

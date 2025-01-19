@@ -21,6 +21,7 @@
 # define NUM_THREADS 1
 # define EPSILON	1e-6
 # define SAMPLES    8
+# define MAX_REFLECTION_DEPTH 16
 
 void	render_scene(mlx_t *mlx, t_scene *scene);
 int		main(int argc, char **argv);
