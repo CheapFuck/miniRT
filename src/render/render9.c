@@ -14,7 +14,7 @@
 
 void	render_scene(mlx_t *mlx, t_scene *scene)
 {
-	static int		i;
+	int		i;
 	pthread_t		threads[NUM_THREADS];
 	mlx_image_t		*img;
 	t_render_data	*data;
@@ -28,6 +28,7 @@ void	render_scene(mlx_t *mlx, t_scene *scene)
 		exit_with_error("Error allocating render data");
 	init_render_scene(mlx, img, scene, data);
 	mlx_loop_hook(mlx, update_display, data);
+	i = 0;
 	while (i < NUM_THREADS)
 	{
 		thread_data = malloc(sizeof(t_thread_data));
